@@ -33,72 +33,19 @@
 
 #include "SDL_syswm.h"
 
-/* GL and GLES2 headers conflict on Linux 32 bits */
-#if SDL_VIDEO_OPENGL_ES2 && !SDL_VIDEO_OPENGL
 #include "SDL_opengles2.h"
-#endif /* SDL_VIDEO_OPENGL_ES2 && !SDL_VIDEO_OPENGL */
 
-#if !SDL_VIDEO_OPENGL
 #ifndef GL_CONTEXT_RELEASE_BEHAVIOR_KHR
 #define GL_CONTEXT_RELEASE_BEHAVIOR_KHR 0x82FB
-#endif
 #endif
 
 /* Available video drivers */
 static VideoBootStrap *bootstrap[] = {
-#if SDL_VIDEO_DRIVER_COCOA
-    &COCOA_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_X11
-    &X11_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_WAYLAND
-    &Wayland_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_VIVANTE
-    &VIVANTE_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_DIRECTFB
-    &DirectFB_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_WINDOWS
-    &WINDOWS_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_WINRT
-    &WINRT_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_HAIKU
-    &HAIKU_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_PANDORA
-    &PND_bootstrap,
-#endif
 #if SDL_VIDEO_DRIVER_UIKIT
     &UIKIT_bootstrap,
 #endif
 #if SDL_VIDEO_DRIVER_ANDROID
     &Android_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_PSP
-    &PSP_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_KMSDRM
-    &KMSDRM_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_RPI
-    &RPI_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_NACL
-    &NACL_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_EMSCRIPTEN
-    &Emscripten_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_QNX
-    &QNX_bootstrap,
-#endif
-#if SDL_VIDEO_DRIVER_OFFSCREEN
-    &OFFSCREEN_bootstrap,
 #endif
     NULL
 };
@@ -130,12 +77,6 @@ static SDL_VideoDevice *_this = NULL;
     }
 
 #define FULLSCREEN_MASK (SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_FULLSCREEN)
-
-#ifdef __MACOSX__
-/* Support for Mac OS X fullscreen spaces */
-extern SDL_bool Cocoa_IsWindowInFullscreenSpace(SDL_Window * window);
-extern SDL_bool Cocoa_SetWindowFullscreenSpace(SDL_Window * window, SDL_bool state);
-#endif
 
 
 /* Support for framebuffer emulation using an accelerated renderer */
@@ -3765,20 +3706,8 @@ SDL_IsScreenKeyboardShown(SDL_Window *window)
 #if SDL_VIDEO_DRIVER_ANDROID
 #include "android/SDL_androidmessagebox.h"
 #endif
-#if SDL_VIDEO_DRIVER_WINDOWS
-#include "windows/SDL_windowsmessagebox.h"
-#endif
-#if SDL_VIDEO_DRIVER_WINRT
-#include "winrt/SDL_winrtmessagebox.h"
-#endif
-#if SDL_VIDEO_DRIVER_COCOA
-#include "cocoa/SDL_cocoamessagebox.h"
-#endif
 #if SDL_VIDEO_DRIVER_UIKIT
 #include "uikit/SDL_uikitmessagebox.h"
-#endif
-#if SDL_VIDEO_DRIVER_X11
-#include "x11/SDL_x11messagebox.h"
 #endif
 
 

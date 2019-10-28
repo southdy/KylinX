@@ -22,9 +22,6 @@
 
 #if SDL_VIDEO_OPENGL_EGL
 
-#if SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_WINRT
-#include "../core/windows/SDL_windows.h"
-#endif
 #if SDL_VIDEO_DRIVER_ANDROID
 #include <android/native_window.h>
 #include "../core/android/SDL_android.h"
@@ -41,45 +38,6 @@
 #define EGL_OPENGL_ES3_BIT_KHR 0x00000040
 #endif
 #endif /* EGL_KHR_create_context */
-
-#if SDL_VIDEO_DRIVER_RPI
-/* Raspbian places the OpenGL ES/EGL binaries in a non standard path */
-#define DEFAULT_EGL ( vc4 ? "libEGL.so.1" : "libbrcmEGL.so" )
-#define DEFAULT_OGL_ES2 ( vc4 ? "libGLESv2.so.2" : "libbrcmGLESv2.so" )
-#define ALT_EGL "libEGL.so"
-#define ALT_OGL_ES2 "libGLESv2.so"
-#define DEFAULT_OGL_ES_PVR ( vc4 ? "libGLES_CM.so.1" : "libbrcmGLESv2.so" )
-#define DEFAULT_OGL_ES ( vc4 ? "libGLESv1_CM.so.1" : "libbrcmGLESv2.so" )
-
-#elif SDL_VIDEO_DRIVER_ANDROID || SDL_VIDEO_DRIVER_VIVANTE
-/* Android */
-#define DEFAULT_EGL "libEGL.so"
-#define DEFAULT_OGL_ES2 "libGLESv2.so"
-#define DEFAULT_OGL_ES_PVR "libGLES_CM.so"
-#define DEFAULT_OGL_ES "libGLESv1_CM.so"
-
-#elif SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_WINRT
-/* EGL AND OpenGL ES support via ANGLE */
-#define DEFAULT_EGL "libEGL.dll"
-#define DEFAULT_OGL_ES2 "libGLESv2.dll"
-#define DEFAULT_OGL_ES_PVR "libGLES_CM.dll"
-#define DEFAULT_OGL_ES "libGLESv1_CM.dll"
-
-#elif SDL_VIDEO_DRIVER_COCOA
-/* EGL AND OpenGL ES support via ANGLE */
-#define DEFAULT_EGL "libEGL.dylib"
-#define DEFAULT_OGL_ES2 "libGLESv2.dylib"
-#define DEFAULT_OGL_ES_PVR "libGLES_CM.dylib"   //???
-#define DEFAULT_OGL_ES "libGLESv1_CM.dylib"     //???
-
-#else
-/* Desktop Linux */
-#define DEFAULT_OGL "libGL.so.1"
-#define DEFAULT_EGL "libEGL.so.1"
-#define DEFAULT_OGL_ES2 "libGLESv2.so.2"
-#define DEFAULT_OGL_ES_PVR "libGLES_CM.so.1"
-#define DEFAULT_OGL_ES "libGLESv1_CM.so.1"
-#endif /* SDL_VIDEO_DRIVER_RPI */
 
 /** If we happen to not have this defined because of an older EGL version, just define it 0x0
     as eglGetPlatformDisplayEXT will most likely be NULL if this is missing
@@ -212,21 +170,10 @@ static SDL_bool SDL_EGL_HasExtension(_THIS, SDL_EGL_ExtensionType type, const ch
 void *
 SDL_EGL_GetProcAddress(_THIS, const char *proc)
 {
-    const Uint32 eglver = (((Uint32) _this->egl_data->egl_version_major) << 16) | ((Uint32) _this->egl_data->egl_version_minor);
-    const SDL_bool is_egl_15_or_later = eglver >= ((((Uint32) 1) << 16) | 5);
     void *retval = NULL;
 
-    /* EGL 1.5 can use eglGetProcAddress() for any symbol. 1.4 and earlier can't use it for core entry points. */
-    if (!retval && is_egl_15_or_later && _this->egl_data->eglGetProcAddress) {
+    if (_this->egl_data->eglGetProcAddress) {
         retval = _this->egl_data->eglGetProcAddress(proc);
-    }
-
-    /* Try eglGetProcAddress if we on <= 1.4 and still searching... */
-    if (!retval && !is_egl_15_or_later && _this->egl_data->eglGetProcAddress) {
-        retval = _this->egl_data->eglGetProcAddress(proc);
-        if (retval) {
-            return retval;
-        }
     }
 
     return retval;

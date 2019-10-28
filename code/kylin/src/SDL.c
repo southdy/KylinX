@@ -45,10 +45,6 @@
 #if !SDL_TIMERS_DISABLED
 # include "timer/SDL_timer_c.h"
 #endif
-#if SDL_VIDEO_DRIVER_WINDOWS
-extern int SDL_HelperWindowCreate(void);
-extern int SDL_HelperWindowDestroy(void);
-#endif
 
 
 /* This is not declared in any header, although it is shared between some
@@ -57,25 +53,7 @@ extern int SDL_HelperWindowDestroy(void);
 extern SDL_NORETURN void SDL_ExitProcess(const int exitcode);
 SDL_NORETURN void SDL_ExitProcess(const int exitcode)
 {
-#ifdef __WIN32__
-    /* "if you do not know the state of all threads in your process, it is
-       better to call TerminateProcess than ExitProcess"
-       https://msdn.microsoft.com/en-us/library/windows/desktop/ms682658(v=vs.85).aspx */
-    TerminateProcess(GetCurrentProcess(), exitcode);
-    /* MingW doesn't have TerminateProcess marked as noreturn, so add an
-       ExitProcess here that will never be reached but make MingW happy. */
-    ExitProcess(exitcode);
-#elif defined(__EMSCRIPTEN__)
-    emscripten_cancel_main_loop();  /* this should "kill" the app. */
-    emscripten_force_exit(exitcode);  /* this should "kill" the app. */
-    exit(exitcode);
-#elif defined(__HAIKU__)  /* Haiku has _Exit, but it's not marked noreturn. */
     _exit(exitcode);
-#elif defined(HAVE__EXIT) /* Upper case _Exit() */
-    _Exit(exitcode);
-#else
-    _exit(exitcode);
-#endif
 }
 
 
@@ -325,9 +303,6 @@ SDL_Quit(void)
     SDL_bInMainQuit = SDL_TRUE;
 
     /* Quit all subsystems */
-#if SDL_VIDEO_DRIVER_WINDOWS
-    SDL_HelperWindowDestroy();
-#endif
     SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
 
 #if !SDL_TIMERS_DISABLED
@@ -441,27 +416,5 @@ SDL_IsTablet()
     return SDL_FALSE;
 #endif
 }
-
-#if defined(__WIN32__)
-
-#if (!defined(HAVE_LIBC) || defined(__WATCOMC__)) && !defined(SDL_STATIC_LIB)
-/* Need to include DllMain() on Watcom C for some reason.. */
-
-BOOL APIENTRY
-_DllMainCRTStartup(HANDLE hModule,
-                   DWORD ul_reason_for_call, LPVOID lpReserved)
-{
-    switch (ul_reason_for_call) {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
-}
-#endif /* Building DLL */
-
-#endif /* __WIN32__ */
 
 /* vi: set sts=4 ts=4 sw=4 expandtab: */

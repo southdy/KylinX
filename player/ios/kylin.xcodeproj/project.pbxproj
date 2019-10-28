@@ -70,7 +70,6 @@
 		F1E638E12366026B000427C8 /* SDL_error.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6381D2366026B000427C8 /* SDL_error.c */; };
 		F1E638E22366026B000427C8 /* SDL_mixer.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6381F2366026B000427C8 /* SDL_mixer.c */; };
 		F1E638E32366026B000427C8 /* SDL_wave.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638202366026B000427C8 /* SDL_wave.c */; };
-		F1E638E62366026B000427C8 /* SDL_audiodev.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638292366026B000427C8 /* SDL_audiodev.c */; };
 		F1E638E72366026B000427C8 /* SDL_audiotypecvt.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6382B2366026B000427C8 /* SDL_audiotypecvt.c */; };
 		F1E638E82366026B000427C8 /* SDL_audiocvt.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6382C2366026B000427C8 /* SDL_audiocvt.c */; };
 		F1E638EA2366026B000427C8 /* SDL_audio.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638312366026B000427C8 /* SDL_audio.c */; };
@@ -203,8 +202,6 @@
 		F1E6381F2366026B000427C8 /* SDL_mixer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_mixer.c; sourceTree = "<group>"; };
 		F1E638202366026B000427C8 /* SDL_wave.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_wave.c; sourceTree = "<group>"; };
 		F1E638242366026B000427C8 /* SDL_audio_c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_audio_c.h; sourceTree = "<group>"; };
-		F1E638252366026B000427C8 /* SDL_audiodev_c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_audiodev_c.h; sourceTree = "<group>"; };
-		F1E638292366026B000427C8 /* SDL_audiodev.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_audiodev.c; sourceTree = "<group>"; };
 		F1E6382A2366026B000427C8 /* SDL_sysaudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_sysaudio.h; sourceTree = "<group>"; };
 		F1E6382B2366026B000427C8 /* SDL_audiotypecvt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_audiotypecvt.c; sourceTree = "<group>"; };
 		F1E6382C2366026B000427C8 /* SDL_audiocvt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_audiocvt.c; sourceTree = "<group>"; };
@@ -609,12 +606,10 @@
 			children = (
 				F1E638312366026B000427C8 /* SDL_audio.c */,
 				F1E6382C2366026B000427C8 /* SDL_audiocvt.c */,
-				F1E638292366026B000427C8 /* SDL_audiodev.c */,
 				F1E6382B2366026B000427C8 /* SDL_audiotypecvt.c */,
 				F1E6381F2366026B000427C8 /* SDL_mixer.c */,
 				F1E638202366026B000427C8 /* SDL_wave.c */,
 				F1E638242366026B000427C8 /* SDL_audio_c.h */,
-				F1E638252366026B000427C8 /* SDL_audiodev_c.h */,
 				F1E6382A2366026B000427C8 /* SDL_sysaudio.h */,
 				F1E6382D2366026B000427C8 /* SDL_wave.h */,
 				F1E638322366026B000427C8 /* coreaudio */,
@@ -886,7 +881,6 @@
 				F1E638F72366026C000427C8 /* SDL_windowevents.c in Sources */,
 				F1E638BE2366026B000427C8 /* SDL_blit_1.c in Sources */,
 				F1E634B823660182000427C8 /* kylin.c in Sources */,
-				F1E638E62366026B000427C8 /* SDL_audiodev.c in Sources */,
 				F1E638F12366026B000427C8 /* SDL_getenv.c in Sources */,
 				F1E638C82366026B000427C8 /* SDL_rwops.c in Sources */,
 				F1E638DE2366026B000427C8 /* SDL_spinlock.c in Sources */,
