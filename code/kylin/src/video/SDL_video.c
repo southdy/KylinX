@@ -764,8 +764,8 @@ SDL_AddDisplayMode(SDL_VideoDisplay * display,  const SDL_DisplayMode * mode)
     display->num_display_modes++;
 
     /* Re-sort video modes */
-    SDL_qsort(display->display_modes, display->num_display_modes,
-              sizeof(SDL_DisplayMode), cmpmodes);
+    qsort(display->display_modes, display->num_display_modes,
+          sizeof(SDL_DisplayMode), cmpmodes);
 
     return SDL_TRUE;
 }
@@ -775,8 +775,8 @@ SDL_GetNumDisplayModesForDisplay(SDL_VideoDisplay * display)
 {
     if (!display->num_display_modes && _this->GetDisplayModes) {
         _this->GetDisplayModes(_this, display);
-        SDL_qsort(display->display_modes, display->num_display_modes,
-                  sizeof(SDL_DisplayMode), cmpmodes);
+        qsort(display->display_modes, display->num_display_modes,
+              sizeof(SDL_DisplayMode), cmpmodes);
     }
     return display->num_display_modes;
 }

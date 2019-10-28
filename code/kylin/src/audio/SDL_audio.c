@@ -49,9 +49,6 @@ static const AudioBootStrap *const bootstrap[] = {
 
 
 #ifdef HAVE_LIBSAMPLERATE_H
-#ifdef SDL_LIBSAMPLERATE_DYNAMIC
-static void *SRC_lib = NULL;
-#endif
 SDL_bool SRC_available = SDL_FALSE;
 int SRC_converter = 0;
 SRC_STATE* (*SRC_src_new)(int converter_type, int channels, int *error) = NULL;
@@ -80,32 +77,11 @@ LoadLibSampleRate(void)
         return SDL_FALSE;  /* treat it like "default", don't load anything. */
     }
 
-#ifdef SDL_LIBSAMPLERATE_DYNAMIC
-    SDL_assert(SRC_lib == NULL);
-    SRC_lib = SDL_LoadObject(SDL_LIBSAMPLERATE_DYNAMIC);
-    if (!SRC_lib) {
-        SDL_ClearError();
-        return SDL_FALSE;
-    }
-
-    SRC_src_new = (SRC_STATE* (*)(int converter_type, int channels, int *error))SDL_LoadFunction(SRC_lib, "src_new");
-    SRC_src_process = (int (*)(SRC_STATE *state, SRC_DATA *data))SDL_LoadFunction(SRC_lib, "src_process");
-    SRC_src_reset = (int(*)(SRC_STATE *state))SDL_LoadFunction(SRC_lib, "src_reset");
-    SRC_src_delete = (SRC_STATE* (*)(SRC_STATE *state))SDL_LoadFunction(SRC_lib, "src_delete");
-    SRC_src_strerror = (const char* (*)(int error))SDL_LoadFunction(SRC_lib, "src_strerror");
-
-    if (!SRC_src_new || !SRC_src_process || !SRC_src_reset || !SRC_src_delete || !SRC_src_strerror) {
-        SDL_UnloadObject(SRC_lib);
-        SRC_lib = NULL;
-        return SDL_FALSE;
-    }
-#else
     SRC_src_new = src_new;
     SRC_src_process = src_process;
     SRC_src_reset = src_reset;
     SRC_src_delete = src_delete;
     SRC_src_strerror = src_strerror;
-#endif
 
     SRC_available = SDL_TRUE;
     return SDL_TRUE;
@@ -114,13 +90,6 @@ LoadLibSampleRate(void)
 static void
 UnloadLibSampleRate(void)
 {
-#ifdef SDL_LIBSAMPLERATE_DYNAMIC
-    if (SRC_lib != NULL) {
-        SDL_UnloadObject(SRC_lib);
-    }
-    SRC_lib = NULL;
-#endif
-
     SRC_available = SDL_FALSE;
     SRC_src_new = NULL;
     SRC_src_process = NULL;

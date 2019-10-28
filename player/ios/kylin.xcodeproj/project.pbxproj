@@ -80,7 +80,6 @@
 		F1E638F02366026B000427C8 /* SDL_iconv.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638442366026B000427C8 /* SDL_iconv.c */; };
 		F1E638F12366026B000427C8 /* SDL_getenv.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638452366026B000427C8 /* SDL_getenv.c */; };
 		F1E638F22366026B000427C8 /* SDL_string.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638462366026B000427C8 /* SDL_string.c */; };
-		F1E638F32366026B000427C8 /* SDL_qsort.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638472366026B000427C8 /* SDL_qsort.c */; };
 		F1E638F42366026B000427C8 /* SDL_stdlib.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638482366026B000427C8 /* SDL_stdlib.c */; };
 		F1E638F52366026B000427C8 /* SDL_malloc.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638492366026B000427C8 /* SDL_malloc.c */; };
 		F1E638F62366026C000427C8 /* SDL_displayevents.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6384C2366026B000427C8 /* SDL_displayevents.c */; };
@@ -99,7 +98,6 @@
 		F1E639032366026C000427C8 /* SDL_syscond.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6386D2366026B000427C8 /* SDL_syscond.c */; };
 		F1E639042366026C000427C8 /* SDL_systhread.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6386E2366026B000427C8 /* SDL_systhread.c */; };
 		F1E639052366026C000427C8 /* SDL_sysmutex.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6386F2366026B000427C8 /* SDL_sysmutex.c */; };
-		F1E6390C2366026C000427C8 /* SDL_sysloadso.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6387D2366026B000427C8 /* SDL_sysloadso.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -223,7 +221,6 @@
 		F1E638442366026B000427C8 /* SDL_iconv.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_iconv.c; sourceTree = "<group>"; };
 		F1E638452366026B000427C8 /* SDL_getenv.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_getenv.c; sourceTree = "<group>"; };
 		F1E638462366026B000427C8 /* SDL_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_string.c; sourceTree = "<group>"; };
-		F1E638472366026B000427C8 /* SDL_qsort.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_qsort.c; sourceTree = "<group>"; };
 		F1E638482366026B000427C8 /* SDL_stdlib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_stdlib.c; sourceTree = "<group>"; };
 		F1E638492366026B000427C8 /* SDL_malloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_malloc.c; sourceTree = "<group>"; };
 		F1E6384C2366026B000427C8 /* SDL_displayevents.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_displayevents.c; sourceTree = "<group>"; };
@@ -255,7 +252,6 @@
 		F1E6386E2366026B000427C8 /* SDL_systhread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_systhread.c; sourceTree = "<group>"; };
 		F1E6386F2366026B000427C8 /* SDL_sysmutex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_sysmutex.c; sourceTree = "<group>"; };
 		F1E638702366026B000427C8 /* SDL_sysmutex_c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_sysmutex_c.h; sourceTree = "<group>"; };
-		F1E6387D2366026B000427C8 /* SDL_sysloadso.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_sysloadso.c; sourceTree = "<group>"; };
 		F1E6387E2366026B000427C8 /* SDL_dataqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_dataqueue.h; sourceTree = "<group>"; };
 		F1E6390F2366026F000427C8 /* SDL_power.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_power.h; sourceTree = "<group>"; };
 		F1E639102366026F000427C8 /* SDL_revision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_revision.h; sourceTree = "<group>"; };
@@ -277,7 +273,6 @@
 		F1E639252366026F000427C8 /* SDL_name.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_name.h; sourceTree = "<group>"; };
 		F1E639262366026F000427C8 /* SDL_platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_platform.h; sourceTree = "<group>"; };
 		F1E639272366026F000427C8 /* SDL_shape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_shape.h; sourceTree = "<group>"; };
-		F1E6392A2366026F000427C8 /* SDL_loadso.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_loadso.h; sourceTree = "<group>"; };
 		F1E6392C2366026F000427C8 /* SDL_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_config.h; sourceTree = "<group>"; };
 		F1E6392D2366026F000427C8 /* SDL_audio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_audio.h; sourceTree = "<group>"; };
 		F1E6392E2366026F000427C8 /* SDL_sensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_sensor.h; sourceTree = "<group>"; };
@@ -415,7 +410,6 @@
 				F1E6384A2366026B000427C8 /* events */,
 				F1E637E62366026B000427C8 /* file */,
 				F1E638122366026B000427C8 /* filesystem */,
-				F1E638792366026B000427C8 /* loadso */,
 				F1E637662366026B000427C8 /* power */,
 				F1E637F22366026B000427C8 /* render */,
 				F1E638362366026B000427C8 /* sensor */,
@@ -663,7 +657,6 @@
 				F1E638442366026B000427C8 /* SDL_iconv.c */,
 				F1E638452366026B000427C8 /* SDL_getenv.c */,
 				F1E638462366026B000427C8 /* SDL_string.c */,
-				F1E638472366026B000427C8 /* SDL_qsort.c */,
 				F1E638482366026B000427C8 /* SDL_stdlib.c */,
 				F1E638492366026B000427C8 /* SDL_malloc.c */,
 			);
@@ -728,22 +721,6 @@
 			path = pthread;
 			sourceTree = "<group>";
 		};
-		F1E638792366026B000427C8 /* loadso */ = {
-			isa = PBXGroup;
-			children = (
-				F1E6387C2366026B000427C8 /* dlopen */,
-			);
-			path = loadso;
-			sourceTree = "<group>";
-		};
-		F1E6387C2366026B000427C8 /* dlopen */ = {
-			isa = PBXGroup;
-			children = (
-				F1E6387D2366026B000427C8 /* SDL_sysloadso.c */,
-			);
-			path = dlopen;
-			sourceTree = "<group>";
-		};
 		F1E6390D2366026F000427C8 /* include */ = {
 			isa = PBXGroup;
 			children = (
@@ -767,7 +744,6 @@
 				F1E639252366026F000427C8 /* SDL_name.h */,
 				F1E639262366026F000427C8 /* SDL_platform.h */,
 				F1E639272366026F000427C8 /* SDL_shape.h */,
-				F1E6392A2366026F000427C8 /* SDL_loadso.h */,
 				F1E6392C2366026F000427C8 /* SDL_config.h */,
 				F1E6392D2366026F000427C8 /* SDL_audio.h */,
 				F1E6392E2366026F000427C8 /* SDL_sensor.h */,
@@ -889,7 +865,6 @@
 				F1E638A02366026B000427C8 /* SDL_uikitwindow.m in Sources */,
 				F1E638EA2366026B000427C8 /* SDL_audio.c in Sources */,
 				F1E638AC2366026B000427C8 /* SDL_blit_auto.c in Sources */,
-				F1E638F32366026B000427C8 /* SDL_qsort.c in Sources */,
 				F1E638B42366026B000427C8 /* SDL_yuv.c in Sources */,
 				F1E638EF2366026B000427C8 /* SDL_sensor.c in Sources */,
 				F1E638CD2366026B000427C8 /* SDL_render.c in Sources */,
@@ -901,7 +876,6 @@
 				F1E638A12366026B000427C8 /* SDL_uikitmessagebox.m in Sources */,
 				F1E638802366026B000427C8 /* SDL_power.c in Sources */,
 				F1E638F62366026C000427C8 /* SDL_displayevents.c in Sources */,
-				F1E6390C2366026C000427C8 /* SDL_sysloadso.c in Sources */,
 				F1E638F22366026B000427C8 /* SDL_string.c in Sources */,
 				F1E638ED2366026B000427C8 /* SDL_coremotionsensor.m in Sources */,
 				F1E638BF2366026B000427C8 /* SDL_fillrect.c in Sources */,

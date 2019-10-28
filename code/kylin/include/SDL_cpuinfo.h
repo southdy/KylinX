@@ -30,76 +30,6 @@
 
 #include "SDL_stdinc.h"
 
-/* Need to do this here because intrin.h has C++ code in it */
-/* Visual Studio 2005 has a bug where intrin.h conflicts with winnt.h */
-#if defined(_MSC_VER) && (_MSC_VER >= 1500) && (defined(_M_IX86) || defined(_M_X64))
-#ifdef __clang__
-/* Many of the intrinsics SDL uses are not implemented by clang with Visual Studio */
-#undef __MMX__
-#undef __SSE__
-#undef __SSE2__
-#else
-#include <intrin.h>
-#ifndef _WIN64
-#ifndef __MMX__
-#define __MMX__
-#endif
-#ifndef __3dNOW__
-#define __3dNOW__
-#endif
-#endif
-#ifndef __SSE__
-#define __SSE__
-#endif
-#ifndef __SSE2__
-#define __SSE2__
-#endif
-#endif /* __clang__ */
-#elif defined(__MINGW64_VERSION_MAJOR)
-#include <intrin.h>
-#else
-/* altivec.h redefining bool causes a number of problems, see bugs 3993 and 4392, so you need to explicitly define SDL_ENABLE_ALTIVEC_H to have it included. */
-#if defined(HAVE_ALTIVEC_H) && defined(__ALTIVEC__) && !defined(__APPLE_ALTIVEC__) && defined(SDL_ENABLE_ALTIVEC_H)
-#include <altivec.h>
-#endif
-#if !defined(SDL_DISABLE_ARM_NEON_H)
-#  if defined(__ARM_NEON)
-#    include <arm_neon.h>
-#  elif defined(__WINDOWS__) || defined(__WINRT__)
-/* Visual Studio doesn't define __ARM_ARCH, but _M_ARM (if set, always 7), and _M_ARM64 (if set, always 1). */
-#    if defined(_M_ARM)
-#      include <armintr.h>
-#      include <arm_neon.h>
-#      define __ARM_NEON 1 /* Set __ARM_NEON so that it can be used elsewhere, at compile time */
-#    endif
-#    if defined (_M_ARM64)
-#      include <arm64intr.h>
-#      include <arm64_neon.h>
-#      define __ARM_NEON 1 /* Set __ARM_NEON so that it can be used elsewhere, at compile time */
-#    endif
-#  endif
-#endif
-#if defined(__3dNOW__) && !defined(SDL_DISABLE_MM3DNOW_H)
-#include <mm3dnow.h>
-#endif
-#if defined(HAVE_IMMINTRIN_H) && !defined(SDL_DISABLE_IMMINTRIN_H)
-#include <immintrin.h>
-#else
-#if defined(__MMX__) && !defined(SDL_DISABLE_MMINTRIN_H)
-#include <mmintrin.h>
-#endif
-#if defined(__SSE__) && !defined(SDL_DISABLE_XMMINTRIN_H)
-#include <xmmintrin.h>
-#endif
-#if defined(__SSE2__) && !defined(SDL_DISABLE_EMMINTRIN_H)
-#include <emmintrin.h>
-#endif
-#if defined(__SSE3__) && !defined(SDL_DISABLE_PMMINTRIN_H)
-#include <pmmintrin.h>
-#endif
-#endif /* HAVE_IMMINTRIN_H */
-#endif /* compiler version */
-
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -112,24 +42,6 @@ extern "C" {
  * We'll use the larger value to be generally safe.
  */
 #define SDL_CACHELINE_SIZE  128
-
-/**
- *  This function returns the number of CPU cores available.
- */
-extern DECLSPEC int SDLCALL SDL_GetCPUCount(void);
-
-/**
- *  This function returns the L1 cache line size of the CPU
- *
- *  This is useful for determining multi-threaded structure padding
- *  or SIMD prefetch sizes.
- */
-extern DECLSPEC int SDLCALL SDL_GetCPUCacheLineSize(void);
-
-/**
- *  This function returns the amount of RAM configured in the system, in MB.
- */
-extern DECLSPEC int SDLCALL SDL_GetSystemRAM(void);
 
 /**
  * \brief Report the alignment this system needs for SIMD allocations.

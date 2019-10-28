@@ -21,7 +21,6 @@ file(GLOB SOURCE_FILES_KYLIN
 	${PROJ_DIR}/kylin/src/cpuinfo/*.c
 	${PROJ_DIR}/kylin/src/events/*.c
 	${PROJ_DIR}/kylin/src/file/*.c
-	${PROJ_DIR}/kylin/src/loadso/dlopen/*.c
 	${PROJ_DIR}/kylin/src/power/*.c
 	${PROJ_DIR}/kylin/src/power/android/*.c
 	${PROJ_DIR}/kylin/src/filesystem/android/*.c
