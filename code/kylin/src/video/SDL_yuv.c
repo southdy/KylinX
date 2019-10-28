@@ -179,115 +179,6 @@ static int GetYUVPlanes(int width, int height, Uint32 format, const void *yuv, i
     return 0;
 }
 
-static SDL_bool yuv_rgb_sse(
-    Uint32 src_format, Uint32 dst_format,
-    Uint32 width, Uint32 height, 
-    const Uint8 *y, const Uint8 *u, const Uint8 *v, Uint32 y_stride, Uint32 uv_stride, 
-    Uint8 *rgb, Uint32 rgb_stride, 
-    YCbCrType yuv_type)
-{
-#ifdef __SSE2__
-    if (!SDL_HasSSE2()) {
-        return SDL_FALSE;
-    }
-
-    if (src_format == SDL_PIXELFORMAT_YV12 ||
-        src_format == SDL_PIXELFORMAT_IYUV) {
-
-        switch (dst_format) {
-        case SDL_PIXELFORMAT_RGB565:
-            yuv420_rgb565_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGB24:
-            yuv420_rgb24_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGBX8888:
-        case SDL_PIXELFORMAT_RGBA8888:
-            yuv420_rgba_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_BGRX8888:
-        case SDL_PIXELFORMAT_BGRA8888:
-            yuv420_bgra_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGB888:
-        case SDL_PIXELFORMAT_ARGB8888:
-            yuv420_argb_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_BGR888:
-        case SDL_PIXELFORMAT_ABGR8888:
-            yuv420_abgr_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        default:
-            break;
-        }
-    }
-
-    if (src_format == SDL_PIXELFORMAT_YUY2 ||
-        src_format == SDL_PIXELFORMAT_UYVY ||
-        src_format == SDL_PIXELFORMAT_YVYU) {
-
-        switch (dst_format) {
-        case SDL_PIXELFORMAT_RGB565:
-            yuv422_rgb565_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGB24:
-            yuv422_rgb24_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGBX8888:
-        case SDL_PIXELFORMAT_RGBA8888:
-            yuv422_rgba_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_BGRX8888:
-        case SDL_PIXELFORMAT_BGRA8888:
-            yuv422_bgra_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGB888:
-        case SDL_PIXELFORMAT_ARGB8888:
-            yuv422_argb_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_BGR888:
-        case SDL_PIXELFORMAT_ABGR8888:
-            yuv422_abgr_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        default:
-            break;
-        }
-    }
-
-    if (src_format == SDL_PIXELFORMAT_NV12 ||
-        src_format == SDL_PIXELFORMAT_NV21) {
-
-        switch (dst_format) {
-        case SDL_PIXELFORMAT_RGB565:
-            yuvnv12_rgb565_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGB24:
-            yuvnv12_rgb24_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGBX8888:
-        case SDL_PIXELFORMAT_RGBA8888:
-            yuvnv12_rgba_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_BGRX8888:
-        case SDL_PIXELFORMAT_BGRA8888:
-            yuvnv12_bgra_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_RGB888:
-        case SDL_PIXELFORMAT_ARGB8888:
-            yuvnv12_argb_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        case SDL_PIXELFORMAT_BGR888:
-        case SDL_PIXELFORMAT_ABGR8888:
-            yuvnv12_abgr_sseu(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
-            return SDL_TRUE;
-        default:
-            break;
-        }
-    }
-#endif
-    return SDL_FALSE;
-}
-
 static SDL_bool yuv_rgb_std(
     Uint32 src_format, Uint32 dst_format,
     Uint32 width, Uint32 height, 
@@ -409,10 +300,6 @@ SDL_ConvertPixels_YUV_to_RGB(int width, int height,
 
     if (GetYUVConversionType(width, height, &yuv_type) < 0) {
         return -1;
-    }
-
-    if (yuv_rgb_sse(src_format, dst_format, width, height, y, u, v, y_stride, uv_stride, (Uint8*)dst, dst_pitch, yuv_type)) {
-        return 0;
     }
 
     if (yuv_rgb_std(src_format, dst_format, width, height, y, u, v, y_stride, uv_stride, (Uint8*)dst, dst_pitch, yuv_type)) {
@@ -961,9 +848,6 @@ SDL_ConvertPixels_PackUVPlanes_to_NV(int width, int height, const void *src, int
     const Uint8 *src1, *src2;
     Uint8 *dstUV;
     Uint8 *tmp = NULL;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     /* Skip the Y plane */
     src = (const Uint8 *)src + height * src_pitch;
@@ -991,22 +875,6 @@ SDL_ConvertPixels_PackUVPlanes_to_NV(int width, int height, const void *src, int
     y = UVheight;
     while (y--) {
         x = UVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            while (x >= 16) {
-                __m128i u = _mm_loadu_si128((__m128i *)src1);
-                __m128i v = _mm_loadu_si128((__m128i *)src2);
-                __m128i uv1 = _mm_unpacklo_epi8(u, v);
-                __m128i uv2 = _mm_unpackhi_epi8(u, v);
-                _mm_storeu_si128((__m128i*)dstUV, uv1);
-                _mm_storeu_si128((__m128i*)(dstUV + 16), uv2);
-                src1 += 16;
-                src2 += 16;
-                dstUV += 32;
-                x -= 16;
-            }
-        }
-#endif
         while (x--) {
             *dstUV++ = *src1++;
             *dstUV++ = *src2++;
@@ -1035,9 +903,6 @@ SDL_ConvertPixels_SplitNV_to_UVPlanes(int width, int height, const void *src, in
     const Uint8 *srcUV;
     Uint8 *dst1, *dst2;
     Uint8 *tmp = NULL;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     /* Skip the Y plane */
     src = (const Uint8 *)src + height * src_pitch;
@@ -1065,27 +930,6 @@ SDL_ConvertPixels_SplitNV_to_UVPlanes(int width, int height, const void *src, in
     y = UVheight;
     while (y--) {
         x = UVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            __m128i mask = _mm_set1_epi16(0x00FF);
-            while (x >= 16) {
-                __m128i uv1 = _mm_loadu_si128((__m128i*)srcUV);
-                __m128i uv2 = _mm_loadu_si128((__m128i*)(srcUV+16));
-                __m128i u1 = _mm_and_si128(uv1, mask);
-                __m128i u2 = _mm_and_si128(uv2, mask);
-                __m128i u = _mm_packus_epi16(u1, u2);
-                __m128i v1 = _mm_srli_epi16(uv1, 8);
-                __m128i v2 = _mm_srli_epi16(uv2, 8);
-                __m128i v = _mm_packus_epi16(v1, v2);
-                _mm_storeu_si128((__m128i*)dst1, u);
-                _mm_storeu_si128((__m128i*)dst2, v);
-                srcUV += 32;
-                dst1 += 16;
-                dst2 += 16;
-                x -= 16;
-            }
-        }
-#endif
         while (x--) {
             *dst1++ = *srcUV++;
             *dst2++ = *srcUV++;
@@ -1113,9 +957,6 @@ SDL_ConvertPixels_SwapNV(int width, int height, const void *src, int src_pitch, 
     const int dstUVPitchLeft = (dstUVPitch - UVwidth*2)/sizeof(Uint16);
     const Uint16 *srcUV;
     Uint16 *dstUV;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     /* Skip the Y plane */
     src = (const Uint8 *)src + height * src_pitch;
@@ -1126,20 +967,6 @@ SDL_ConvertPixels_SwapNV(int width, int height, const void *src, int src_pitch, 
     y = UVheight;
     while (y--) {
         x = UVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            while (x >= 8) {
-                __m128i uv = _mm_loadu_si128((__m128i*)srcUV);
-                __m128i v = _mm_slli_epi16(uv, 8);
-                __m128i u = _mm_srli_epi16(uv, 8);
-                __m128i vu = _mm_or_si128(v, u);
-                _mm_storeu_si128((__m128i*)dstUV, vu);
-                srcUV += 8;
-                dstUV += 8;
-                x -= 8;
-            }
-        }
-#endif
         while (x--) {
             *dstUV++ = SDL_Swap16(*srcUV++);
         }
@@ -1221,25 +1048,6 @@ SDL_ConvertPixels_Planar2x2_to_Planar2x2(int width, int height,
     return SDL_SetError("SDL_ConvertPixels_Planar2x2_to_Planar2x2: Unsupported YUV conversion: %s -> %s", SDL_GetPixelFormatName(src_format), SDL_GetPixelFormatName(dst_format));
 }
 
-#ifdef __SSE2__
-#define PACKED4_TO_PACKED4_ROW_SSE2(shuffle)                                                        \
-    while (x >= 4) {                                                                                \
-        __m128i yuv = _mm_loadu_si128((__m128i*)srcYUV);                                            \
-        __m128i lo = _mm_unpacklo_epi8(yuv, _mm_setzero_si128());                                   \
-        __m128i hi = _mm_unpackhi_epi8(yuv, _mm_setzero_si128());                                   \
-        lo = _mm_shufflelo_epi16(lo, shuffle);                                                      \
-        lo = _mm_shufflehi_epi16(lo, shuffle);                                                      \
-        hi = _mm_shufflelo_epi16(hi, shuffle);                                                      \
-        hi = _mm_shufflehi_epi16(hi, shuffle);                                                      \
-        yuv = _mm_packus_epi16(lo, hi);                                                             \
-        _mm_storeu_si128((__m128i*)dstYUV, yuv);                                                    \
-        srcYUV += 16;                                                                               \
-        dstYUV += 16;                                                                               \
-        x -= 4;                                                                                     \
-    }                                                                                               \
-
-#endif
-
 static int
 SDL_ConvertPixels_YUY2_to_UYVY(int width, int height, const void *src, int src_pitch, void *dst, int dst_pitch)
 {
@@ -1249,18 +1057,10 @@ SDL_ConvertPixels_YUY2_to_UYVY(int width, int height, const void *src, int src_p
     const int dstYUVPitchLeft = (dst_pitch - YUVwidth*4);
     const Uint8 *srcYUV = (const Uint8 *)src;
     Uint8 *dstYUV = (Uint8 *)dst;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     y = height;
     while (y--) {
         x = YUVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            PACKED4_TO_PACKED4_ROW_SSE2(_MM_SHUFFLE(2, 3, 0, 1));
-        }
-#endif
         while (x--) {
             Uint8 Y1, U, Y2, V;
 
@@ -1291,18 +1091,10 @@ SDL_ConvertPixels_YUY2_to_YVYU(int width, int height, const void *src, int src_p
     const int dstYUVPitchLeft = (dst_pitch - YUVwidth*4);
     const Uint8 *srcYUV = (const Uint8 *)src;
     Uint8 *dstYUV = (Uint8 *)dst;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     y = height;
     while (y--) {
         x = YUVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            PACKED4_TO_PACKED4_ROW_SSE2(_MM_SHUFFLE(1, 2, 3, 0));
-        }
-#endif
         while (x--) {
             Uint8 Y1, U, Y2, V;
 
@@ -1333,18 +1125,10 @@ SDL_ConvertPixels_UYVY_to_YUY2(int width, int height, const void *src, int src_p
     const int dstYUVPitchLeft = (dst_pitch - YUVwidth*4);
     const Uint8 *srcYUV = (const Uint8 *)src;
     Uint8 *dstYUV = (Uint8 *)dst;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     y = height;
     while (y--) {
         x = YUVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            PACKED4_TO_PACKED4_ROW_SSE2(_MM_SHUFFLE(2, 3, 0, 1));
-        }
-#endif
         while (x--) {
             Uint8 Y1, U, Y2, V;
 
@@ -1375,18 +1159,10 @@ SDL_ConvertPixels_UYVY_to_YVYU(int width, int height, const void *src, int src_p
     const int dstYUVPitchLeft = (dst_pitch - YUVwidth*4);
     const Uint8 *srcYUV = (const Uint8 *)src;
     Uint8 *dstYUV = (Uint8 *)dst;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     y = height;
     while (y--) {
         x = YUVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            PACKED4_TO_PACKED4_ROW_SSE2(_MM_SHUFFLE(0, 3, 2, 1));
-        }
-#endif
         while (x--) {
             Uint8 Y1, U, Y2, V;
 
@@ -1417,18 +1193,10 @@ SDL_ConvertPixels_YVYU_to_YUY2(int width, int height, const void *src, int src_p
     const int dstYUVPitchLeft = (dst_pitch - YUVwidth*4);
     const Uint8 *srcYUV = (const Uint8 *)src;
     Uint8 *dstYUV = (Uint8 *)dst;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     y = height;
     while (y--) {
         x = YUVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            PACKED4_TO_PACKED4_ROW_SSE2(_MM_SHUFFLE(1, 2, 3, 0));
-        }
-#endif
         while (x--) {
             Uint8 Y1, U, Y2, V;
 
@@ -1459,18 +1227,10 @@ SDL_ConvertPixels_YVYU_to_UYVY(int width, int height, const void *src, int src_p
     const int dstYUVPitchLeft = (dst_pitch - YUVwidth*4);
     const Uint8 *srcYUV = (const Uint8 *)src;
     Uint8 *dstYUV = (Uint8 *)dst;
-#ifdef __SSE2__
-    const SDL_bool use_SSE2 = SDL_HasSSE2();
-#endif
 
     y = height;
     while (y--) {
         x = YUVwidth;
-#ifdef __SSE2__
-        if (use_SSE2) {
-            PACKED4_TO_PACKED4_ROW_SSE2(_MM_SHUFFLE(2, 1, 0, 3));
-        }
-#endif
         while (x--) {
             Uint8 Y1, U, Y2, V;
 

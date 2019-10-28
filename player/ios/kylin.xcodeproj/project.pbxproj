@@ -177,7 +177,6 @@
 		F1E637D52366026B000427C8 /* SDL_yuv_c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_yuv_c.h; sourceTree = "<group>"; };
 		F1E637D62366026B000427C8 /* SDL_blit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_blit.h; sourceTree = "<group>"; };
 		F1E637D92366026B000427C8 /* yuv_rgb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yuv_rgb.c; sourceTree = "<group>"; };
-		F1E637DB2366026B000427C8 /* yuv_rgb_sse_func.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yuv_rgb_sse_func.h; sourceTree = "<group>"; };
 		F1E637DC2366026B000427C8 /* yuv_rgb_std_func.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yuv_rgb_std_func.h; sourceTree = "<group>"; };
 		F1E637DD2366026B000427C8 /* yuv_rgb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yuv_rgb.h; sourceTree = "<group>"; };
 		F1E637DE2366026B000427C8 /* SDL_bmp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_bmp.c; sourceTree = "<group>"; };
@@ -521,7 +520,6 @@
 			isa = PBXGroup;
 			children = (
 				F1E637D92366026B000427C8 /* yuv_rgb.c */,
-				F1E637DB2366026B000427C8 /* yuv_rgb_sse_func.h */,
 				F1E637DC2366026B000427C8 /* yuv_rgb_std_func.h */,
 				F1E637DD2366026B000427C8 /* yuv_rgb.h */,
 			);

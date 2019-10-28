@@ -485,89 +485,6 @@ SDL_GetCPUFeatures(void)
 
 #define CPU_FEATURE_AVAILABLE(f) ((SDL_GetCPUFeatures() & f) ? SDL_TRUE : SDL_FALSE)
 
-SDL_bool SDL_HasRDTSC(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_RDTSC);
-}
-
-SDL_bool
-SDL_HasAltiVec(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_ALTIVEC);
-}
-
-SDL_bool
-SDL_HasMMX(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_MMX);
-}
-
-SDL_bool
-SDL_Has3DNow(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_3DNOW);
-}
-
-SDL_bool
-SDL_HasSSE(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_SSE);
-}
-
-SDL_bool
-SDL_HasSSE2(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_SSE2);
-}
-
-SDL_bool
-SDL_HasSSE3(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_SSE3);
-}
-
-SDL_bool
-SDL_HasSSE41(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_SSE41);
-}
-
-SDL_bool
-SDL_HasSSE42(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_SSE42);
-}
-
-SDL_bool
-SDL_HasAVX(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_AVX);
-}
-
-SDL_bool
-SDL_HasAVX2(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_AVX2);
-}
-
-SDL_bool
-SDL_HasAVX512F(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_AVX512F);
-}
-
-SDL_bool
-SDL_HasARMSIMD(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_ARM_SIMD);
-}
-
-SDL_bool
-SDL_HasNEON(void)
-{
-    return CPU_FEATURE_AVAILABLE(CPU_HAS_NEON);
-}
-
 static int SDL_SystemRAM = 0;
 
 int
@@ -671,20 +588,6 @@ main()
     printf("CPU type: %s\n", SDL_GetCPUType());
     printf("CPU name: %s\n", SDL_GetCPUName());
     printf("CacheLine size: %d\n", SDL_GetCPUCacheLineSize());
-    printf("RDTSC: %d\n", SDL_HasRDTSC());
-    printf("Altivec: %d\n", SDL_HasAltiVec());
-    printf("MMX: %d\n", SDL_HasMMX());
-    printf("3DNow: %d\n", SDL_Has3DNow());
-    printf("SSE: %d\n", SDL_HasSSE());
-    printf("SSE2: %d\n", SDL_HasSSE2());
-    printf("SSE3: %d\n", SDL_HasSSE3());
-    printf("SSE4.1: %d\n", SDL_HasSSE41());
-    printf("SSE4.2: %d\n", SDL_HasSSE42());
-    printf("AVX: %d\n", SDL_HasAVX());
-    printf("AVX2: %d\n", SDL_HasAVX2());
-    printf("AVX-512F: %d\n", SDL_HasAVX512F());
-    printf("ARM SIMD: %d\n", SDL_HasARMSIMD());
-    printf("NEON: %d\n", SDL_HasNEON());
     printf("RAM: %d MB\n", SDL_GetSystemRAM());
     return 0;
 }
