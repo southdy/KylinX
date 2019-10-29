@@ -298,5 +298,5 @@ SDL_SemPost(SDL_sem * sem)
     return retval;
 }
 
-#endif /* __MACOSX__ */
+#endif
 /* vi: set ts=4 sw=4 expandtab: */

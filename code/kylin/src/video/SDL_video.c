@@ -1047,61 +1047,6 @@ SDL_UpdateFullscreenMode(SDL_Window * window, SDL_bool fullscreen)
         return 0;
     }
 
-#ifdef __MACOSX__
-    /* if the window is going away and no resolution change is necessary,
-       do nothing, or else we may trigger an ugly double-transition
-     */
-    if (SDL_strcmp(_this->name, "cocoa") == 0) {  /* don't do this for X11, etc */
-        if (window->is_destroying && (window->last_fullscreen_flags & FULLSCREEN_MASK) == SDL_WINDOW_FULLSCREEN_DESKTOP)
-            return 0;
-    
-        /* If we're switching between a fullscreen Space and "normal" fullscreen, we need to get back to normal first. */
-        if (fullscreen && ((window->last_fullscreen_flags & FULLSCREEN_MASK) == SDL_WINDOW_FULLSCREEN_DESKTOP) && ((window->flags & FULLSCREEN_MASK) == SDL_WINDOW_FULLSCREEN)) {
-            if (!Cocoa_SetWindowFullscreenSpace(window, SDL_FALSE)) {
-                return -1;
-            }
-        } else if (fullscreen && ((window->last_fullscreen_flags & FULLSCREEN_MASK) == SDL_WINDOW_FULLSCREEN) && ((window->flags & FULLSCREEN_MASK) == SDL_WINDOW_FULLSCREEN_DESKTOP)) {
-            display = SDL_GetDisplayForWindow(window);
-            SDL_SetDisplayModeForDisplay(display, NULL);
-            if (_this->SetWindowFullscreen) {
-                _this->SetWindowFullscreen(_this, window, display, SDL_FALSE);
-            }
-        }
-
-        if (Cocoa_SetWindowFullscreenSpace(window, fullscreen)) {
-            if (Cocoa_IsWindowInFullscreenSpace(window) != fullscreen) {
-                return -1;
-            }
-            window->last_fullscreen_flags = window->flags;
-            return 0;
-        }
-    }
-#elif __WINRT__ && (NTDDI_VERSION < NTDDI_WIN10)
-    /* HACK: WinRT 8.x apps can't choose whether or not they are fullscreen
-       or not.  The user can choose this, via OS-provided UI, but this can't
-       be set programmatically.
-
-       Just look at what SDL's WinRT video backend code detected with regards
-       to fullscreen (being active, or not), and figure out a return/error code
-       from that.
-    */
-    if (fullscreen == !(WINRT_DetectWindowFlags(window) & FULLSCREEN_MASK)) {
-        /* Uh oh, either:
-            1. fullscreen was requested, and we're already windowed
-            2. windowed-mode was requested, and we're already fullscreen
-
-            WinRT 8.x can't resolve either programmatically, so we're
-            giving up.
-        */
-        return -1;
-    } else {
-        /* Whatever was requested, fullscreen or windowed mode, is already
-            in-place.
-        */
-        return 0;
-    }
-#endif
-
     display = SDL_GetDisplayForWindow(window);
 
     if (fullscreen) {
@@ -1200,9 +1145,6 @@ SDL_UpdateFullscreenMode(SDL_Window * window, SDL_bool fullscreen)
 static void
 SDL_FinishWindowCreation(SDL_Window *window, Uint32 flags)
 {
-    if (flags & SDL_WINDOW_MAXIMIZED) {
-        SDL_MaximizeWindow(window);
-    }
     if (flags & SDL_WINDOW_MINIMIZED) {
         SDL_MinimizeWindow(window);
     }
@@ -1346,43 +1288,6 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
     return window;
 }
 
-SDL_Window *
-SDL_CreateWindowFrom(const void *data)
-{
-    SDL_Window *window;
-
-    if (!_this) {
-        SDL_UninitializedVideo();
-        return NULL;
-    }
-    if (!_this->CreateSDLWindowFrom) {
-        SDL_Unsupported();
-        return NULL;
-    }
-    window = (SDL_Window *)SDL_calloc(1, sizeof(*window));
-    if (!window) {
-        SDL_OutOfMemory();
-        return NULL;
-    }
-    window->magic = &_this->window_magic;
-    window->id = _this->next_object_id++;
-    window->flags = SDL_WINDOW_FOREIGN;
-    window->last_fullscreen_flags = window->flags;
-    window->is_destroying = SDL_FALSE;
-    window->next = _this->windows;
-    if (_this->windows) {
-        _this->windows->prev = window;
-    }
-    _this->windows = window;
-
-    if (_this->CreateSDLWindowFrom(_this, window, data) < 0) {
-        SDL_DestroyWindow(window);
-        return NULL;
-    }
-
-    return window;
-}
-
 int
 SDL_RecreateWindow(SDL_Window * window, Uint32 flags)
 {
@@ -1467,10 +1372,6 @@ SDL_RecreateWindow(SDL_Window * window, Uint32 flags)
         _this->SetWindowTitle(_this, window);
     }
 
-    if (_this->SetWindowIcon && window->icon) {
-        _this->SetWindowIcon(_this, window, window->icon);
-    }
-
     SDL_FinishWindowCreation(window, flags);
 
     return 0;
@@ -1537,28 +1438,6 @@ SDL_GetWindowTitle(SDL_Window * window)
     CHECK_WINDOW_MAGIC(window, "");
 
     return window->title ? window->title : "";
-}
-
-void
-SDL_SetWindowIcon(SDL_Window * window, SDL_Surface * icon)
-{
-    CHECK_WINDOW_MAGIC(window,);
-
-    if (!icon) {
-        return;
-    }
-
-    SDL_FreeSurface(window->icon);
-
-    /* Convert the icon into ARGB8888 */
-    window->icon = SDL_ConvertSurfaceFormat(icon, SDL_PIXELFORMAT_ARGB8888, 0);
-    if (!window->icon) {
-        return;
-    }
-
-    if (_this->SetWindowIcon) {
-        _this->SetWindowIcon(_this, window, window->icon);
-    }
 }
 
 void*
@@ -1665,10 +1544,6 @@ SDL_SetWindowPosition(SDL_Window * window, int x, int y)
         }
         if (!SDL_WINDOWPOS_ISUNDEFINED(y)) {
             window->y = y;
-        }
-
-        if (_this->SetWindowPosition) {
-            _this->SetWindowPosition(_this, window);
         }
     }
 }
@@ -1789,9 +1664,6 @@ SDL_SetWindowSize(SDL_Window * window, int w, int h)
     } else {
         window->w = w;
         window->h = h;
-        if (_this->SetWindowSize) {
-            _this->SetWindowSize(_this, window);
-        }
         if (window->w == w && window->h == h) {
             /* We didn't get a SDL_WINDOWEVENT_RESIZED event (by design) */
             SDL_OnWindowResized(window);
@@ -1809,28 +1681,6 @@ SDL_GetWindowSize(SDL_Window * window, int *w, int *h)
     if (h) {
         *h = window->h;
     }
-}
-
-int
-SDL_GetWindowBordersSize(SDL_Window * window, int *top, int *left, int *bottom, int *right)
-{
-    int dummy = 0;
-
-    if (!top) { top = &dummy; }
-    if (!left) { left = &dummy; }
-    if (!right) { right = &dummy; }
-    if (!bottom) { bottom = &dummy; }
-
-    /* Always initialize, so applications don't have to care */
-    *top = *left = *bottom = *right = 0;
-
-    CHECK_WINDOW_MAGIC(window, -1);
-
-    if (!_this->GetWindowBordersSize) {
-        return SDL_Unsupported();
-    }
-
-    return _this->GetWindowBordersSize(_this, window, top, left, bottom, right);
 }
 
 void
@@ -1856,9 +1706,6 @@ SDL_SetWindowMinimumSize(SDL_Window * window, int min_w, int min_h)
     window->min_h = min_h;
 
     if (!(window->flags & SDL_WINDOW_FULLSCREEN)) {
-        if (_this->SetWindowMinimumSize) {
-            _this->SetWindowMinimumSize(_this, window);
-        }
         /* Ensure that window is not smaller than minimal size */
         SDL_SetWindowSize(window, SDL_max(window->w, window->min_w), SDL_max(window->h, window->min_h));
     }
@@ -1898,9 +1745,6 @@ SDL_SetWindowMaximumSize(SDL_Window * window, int max_w, int max_h)
     window->max_h = max_h;
 
     if (!(window->flags & SDL_WINDOW_FULLSCREEN)) {
-        if (_this->SetWindowMaximumSize) {
-            _this->SetWindowMaximumSize(_this, window);
-        }
         /* Ensure that window is not larger than maximal size */
         SDL_SetWindowSize(window, SDL_min(window->w, window->max_w), SDL_min(window->h, window->max_h));
     }
@@ -1965,22 +1809,6 @@ SDL_RaiseWindow(SDL_Window * window)
     }
 }
 
-void
-SDL_MaximizeWindow(SDL_Window * window)
-{
-    CHECK_WINDOW_MAGIC(window,);
-
-    if (window->flags & SDL_WINDOW_MAXIMIZED) {
-        return;
-    }
-
-    /* !!! FIXME: should this check if the window is resizable? */
-
-    if (_this->MaximizeWindow) {
-        _this->MaximizeWindow(_this, window);
-    }
-}
-
 static SDL_bool
 CanMinimizeWindow(SDL_Window * window)
 {
@@ -2007,20 +1835,6 @@ SDL_MinimizeWindow(SDL_Window * window)
 
     if (_this->MinimizeWindow) {
         _this->MinimizeWindow(_this, window);
-    }
-}
-
-void
-SDL_RestoreWindow(SDL_Window * window)
-{
-    CHECK_WINDOW_MAGIC(window,);
-
-    if (!(window->flags & (SDL_WINDOW_MAXIMIZED | SDL_WINDOW_MINIMIZED))) {
-        return;
-    }
-
-    if (_this->RestoreWindow) {
-        _this->RestoreWindow(_this, window);
     }
 }
 
@@ -2119,32 +1933,6 @@ SDL_UpdateWindowSurfaceRects(SDL_Window * window, const SDL_Rect * rects,
 
     return _this->UpdateWindowFramebuffer(_this, window, rects, numrects);
 }
-
-int
-SDL_SetWindowModalFor(SDL_Window * modal_window, SDL_Window * parent_window)
-{
-    CHECK_WINDOW_MAGIC(modal_window, -1);
-    CHECK_WINDOW_MAGIC(parent_window, -1);
-
-    if (!_this->SetWindowModalFor) {
-        return SDL_Unsupported();
-    }
-    
-    return _this->SetWindowModalFor(_this, modal_window, parent_window);
-}
-
-int 
-SDL_SetWindowInputFocus(SDL_Window * window)
-{
-    CHECK_WINDOW_MAGIC(window, -1);
-
-    if (!_this->SetWindowInputFocus) {
-        return SDL_Unsupported();
-    }
-    
-    return _this->SetWindowInputFocus(_this, window);
-}
-
 
 void
 SDL_UpdateWindowGrab(SDL_Window * window)
@@ -2250,19 +2038,6 @@ SDL_OnWindowRestored(SDL_Window * window)
 }
 
 void
-SDL_OnWindowEnter(SDL_Window * window)
-{
-    if (_this->OnWindowEnter) {
-        _this->OnWindowEnter(_this, window);
-    }
-}
-
-void
-SDL_OnWindowLeave(SDL_Window * window)
-{
-}
-
-void
 SDL_OnWindowFocusGained(SDL_Window * window)
 {
     SDL_UpdateWindowGrab(window);
@@ -2363,7 +2138,6 @@ SDL_DestroyWindow(SDL_Window * window)
 
     /* Free memory associated with the window */
     SDL_free(window->title);
-    SDL_FreeSurface(window->icon);
     while (window->data) {
         SDL_WindowUserData *data = window->data;
 

@@ -226,11 +226,6 @@ SDL_PromptAssertion(const SDL_assert_data *data, void *userdata)
         }
     }
 
-    /* Re-enter fullscreen mode */
-    if (window) {
-        SDL_RestoreWindow(window);
-    }
-
     SDL_stack_free(message);
 
     return state;

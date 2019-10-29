@@ -44,7 +44,6 @@ struct SDL_Window
     const void *magic;
     Uint32 id;
     char *title;
-    SDL_Surface *icon;
     int x, y;
     int w, h;
     int min_w, min_h;
@@ -167,22 +166,11 @@ struct SDL_VideoDevice
      * Window functions
      */
     int (*CreateSDLWindow) (_THIS, SDL_Window * window);
-    int (*CreateSDLWindowFrom) (_THIS, SDL_Window * window, const void *data);
     void (*SetWindowTitle) (_THIS, SDL_Window * window);
-    void (*SetWindowIcon) (_THIS, SDL_Window * window, SDL_Surface * icon);
-    void (*SetWindowPosition) (_THIS, SDL_Window * window);
-    void (*SetWindowSize) (_THIS, SDL_Window * window);
-    void (*SetWindowMinimumSize) (_THIS, SDL_Window * window);
-    void (*SetWindowMaximumSize) (_THIS, SDL_Window * window);
-    int (*GetWindowBordersSize) (_THIS, SDL_Window * window, int *top, int *left, int *bottom, int *right);
-    int (*SetWindowModalFor) (_THIS, SDL_Window * modal_window, SDL_Window * parent_window);
-    int (*SetWindowInputFocus) (_THIS, SDL_Window * window);
     void (*ShowWindow) (_THIS, SDL_Window * window);
     void (*HideWindow) (_THIS, SDL_Window * window);
     void (*RaiseWindow) (_THIS, SDL_Window * window);
-    void (*MaximizeWindow) (_THIS, SDL_Window * window);
     void (*MinimizeWindow) (_THIS, SDL_Window * window);
-    void (*RestoreWindow) (_THIS, SDL_Window * window);
     void (*SetWindowBordered) (_THIS, SDL_Window * window, SDL_bool bordered);
     void (*SetWindowResizable) (_THIS, SDL_Window * window, SDL_bool resizable);
     void (*SetWindowFullscreen) (_THIS, SDL_Window * window, SDL_VideoDisplay * display, SDL_bool fullscreen);
@@ -191,7 +179,6 @@ struct SDL_VideoDevice
     int (*CreateWindowFramebuffer) (_THIS, SDL_Window * window, Uint32 * format, void ** pixels, int *pitch);
     int (*UpdateWindowFramebuffer) (_THIS, SDL_Window * window, const SDL_Rect * rects, int numrects);
     void (*DestroyWindowFramebuffer) (_THIS, SDL_Window * window);
-    void (*OnWindowEnter) (_THIS, SDL_Window * window);
 
     /* Get some platform dependent window information */
     SDL_bool(*GetWindowWMInfo) (_THIS, SDL_Window * window,
@@ -300,13 +287,10 @@ struct SDL_VideoDevice
     /* * * */
     /* Data private to this driver */
     void *driverdata;
-    struct SDL_GLDriverData *gl_data;
     
 #if SDL_VIDEO_OPENGL_EGL
     struct SDL_EGL_VideoData *egl_data;
 #endif
-
-    struct SDL_PrivateGLESData *gles_data;
 
     /* * * */
     /* The function used to dispose of this structure */
@@ -344,8 +328,6 @@ extern void SDL_OnWindowHidden(SDL_Window * window);
 extern void SDL_OnWindowResized(SDL_Window * window);
 extern void SDL_OnWindowMinimized(SDL_Window * window);
 extern void SDL_OnWindowRestored(SDL_Window * window);
-extern void SDL_OnWindowEnter(SDL_Window * window);
-extern void SDL_OnWindowLeave(SDL_Window * window);
 extern void SDL_OnWindowFocusGained(SDL_Window * window);
 extern void SDL_OnWindowFocusLost(SDL_Window * window);
 extern void SDL_UpdateWindowGrab(SDL_Window * window);

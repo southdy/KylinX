@@ -72,14 +72,11 @@ typedef struct
  *  \sa SDL_GetWindowSize()
  *  \sa SDL_GetWindowTitle()
  *  \sa SDL_HideWindow()
- *  \sa SDL_MaximizeWindow()
  *  \sa SDL_MinimizeWindow()
  *  \sa SDL_RaiseWindow()
- *  \sa SDL_RestoreWindow()
  *  \sa SDL_SetWindowData()
  *  \sa SDL_SetWindowFullscreen()
  *  \sa SDL_SetWindowGrab()
- *  \sa SDL_SetWindowIcon()
  *  \sa SDL_SetWindowPosition()
  *  \sa SDL_SetWindowSize()
  *  \sa SDL_SetWindowBordered()
@@ -159,8 +156,6 @@ typedef enum
     SDL_WINDOWEVENT_MAXIMIZED,      /**< Window has been maximized */
     SDL_WINDOWEVENT_RESTORED,       /**< Window has been restored to normal size
                                          and position */
-    SDL_WINDOWEVENT_ENTER,          /**< Window has gained mouse focus */
-    SDL_WINDOWEVENT_LEAVE,          /**< Window has lost mouse focus */
     SDL_WINDOWEVENT_FOCUS_GAINED,   /**< Window has gained keyboard focus */
     SDL_WINDOWEVENT_FOCUS_LOST,     /**< Window has lost keyboard focus */
     SDL_WINDOWEVENT_CLOSE,          /**< The window manager requests that the window be closed */
@@ -516,17 +511,6 @@ extern DECLSPEC SDL_Window * SDLCALL SDL_CreateWindow(const char *title,
                                                       int h, Uint32 flags);
 
 /**
- *  \brief Create an SDL window from an existing native window.
- *
- *  \param data A pointer to driver-dependent window creation data
- *
- *  \return The created window, or NULL if window creation failed.
- *
- *  \sa SDL_DestroyWindow()
- */
-extern DECLSPEC SDL_Window * SDLCALL SDL_CreateWindowFrom(const void *data);
-
-/**
  *  \brief Get the numeric ID of a window, for logging purposes.
  */
 extern DECLSPEC Uint32 SDLCALL SDL_GetWindowID(SDL_Window * window);
@@ -555,15 +539,6 @@ extern DECLSPEC void SDLCALL SDL_SetWindowTitle(SDL_Window * window,
  *  \sa SDL_SetWindowTitle()
  */
 extern DECLSPEC const char *SDLCALL SDL_GetWindowTitle(SDL_Window * window);
-
-/**
- *  \brief Set the icon for a window.
- *
- *  \param window The window for which the icon should be set.
- *  \param icon The icon for the window.
- */
-extern DECLSPEC void SDLCALL SDL_SetWindowIcon(SDL_Window * window,
-                                               SDL_Surface * icon);
 
 /**
  *  \brief Associate an arbitrary named pointer with a window.
@@ -664,25 +639,6 @@ extern DECLSPEC void SDLCALL SDL_SetWindowSize(SDL_Window * window, int w,
  */
 extern DECLSPEC void SDLCALL SDL_GetWindowSize(SDL_Window * window, int *w,
                                                int *h);
-
-/**
- *  \brief Get the size of a window's borders (decorations) around the client area.
- *
- *  \param window The window to query.
- *  \param top Pointer to variable for storing the size of the top border. NULL is permitted.
- *  \param left Pointer to variable for storing the size of the left border. NULL is permitted.
- *  \param bottom Pointer to variable for storing the size of the bottom border. NULL is permitted.
- *  \param right Pointer to variable for storing the size of the right border. NULL is permitted.
- *
- *  \return 0 on success, or -1 if getting this information is not supported.
- *
- *  \note if this function fails (returns -1), the size values will be
- *        initialized to 0, 0, 0, 0 (if a non-NULL pointer is provided), as
- *        if the window in question was borderless.
- */
-extern DECLSPEC int SDLCALL SDL_GetWindowBordersSize(SDL_Window * window,
-                                                     int *top, int *left,
-                                                     int *bottom, int *right);
 
 /**
  *  \brief Set the minimum size of a window's client area.
@@ -796,26 +752,11 @@ extern DECLSPEC void SDLCALL SDL_HideWindow(SDL_Window * window);
 extern DECLSPEC void SDLCALL SDL_RaiseWindow(SDL_Window * window);
 
 /**
- *  \brief Make a window as large as possible.
- *
- *  \sa SDL_RestoreWindow()
- */
-extern DECLSPEC void SDLCALL SDL_MaximizeWindow(SDL_Window * window);
-
-/**
  *  \brief Minimize a window to an iconic representation.
  *
- *  \sa SDL_RestoreWindow()
- */
-extern DECLSPEC void SDLCALL SDL_MinimizeWindow(SDL_Window * window);
-
-/**
- *  \brief Restore the size and position of a minimized or maximized window.
- *
- *  \sa SDL_MaximizeWindow()
  *  \sa SDL_MinimizeWindow()
  */
-extern DECLSPEC void SDLCALL SDL_RestoreWindow(SDL_Window * window);
+extern DECLSPEC void SDLCALL SDL_MinimizeWindow(SDL_Window * window);
 
 /**
  *  \brief Set a window's fullscreen state.
@@ -896,30 +837,6 @@ extern DECLSPEC SDL_bool SDLCALL SDL_GetWindowGrab(SDL_Window * window);
  *  \sa SDL_SetWindowGrab()
  */
 extern DECLSPEC SDL_Window * SDLCALL SDL_GetGrabbedWindow(void);
-
-/**
- *  \brief Sets the window as a modal for another window (TODO: reconsider this function and/or its name)
- *
- *  \param modal_window The window that should be modal
- *  \param parent_window The parent window
- *
- *  \return 0 on success, or -1 otherwise.
- */
-extern DECLSPEC int SDLCALL SDL_SetWindowModalFor(SDL_Window * modal_window, SDL_Window * parent_window);
-
-/**
- *  \brief Explicitly sets input focus to the window.
- *
- *  You almost certainly want SDL_RaiseWindow() instead of this function. Use
- *  this with caution, as you might give focus to a window that's completely
- *  obscured by other windows.
- *
- *  \param window The window that should get the input focus
- *
- *  \return 0 on success, or -1 otherwise.
- *  \sa SDL_RaiseWindow()
- */
-extern DECLSPEC int SDLCALL SDL_SetWindowInputFocus(SDL_Window * window);
 
 /**
  *  \brief Destroy a window.
