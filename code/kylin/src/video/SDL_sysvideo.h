@@ -57,12 +57,6 @@ struct SDL_Window
 
     SDL_DisplayMode fullscreen_mode;
 
-    float opacity;
-
-    float brightness;
-    Uint16 *gamma;
-    Uint16 *saved_gamma;        /* (just offset into gamma) */
-
     SDL_Surface *surface;
     SDL_bool surface_valid;
 
@@ -181,7 +175,6 @@ struct SDL_VideoDevice
     void (*SetWindowMinimumSize) (_THIS, SDL_Window * window);
     void (*SetWindowMaximumSize) (_THIS, SDL_Window * window);
     int (*GetWindowBordersSize) (_THIS, SDL_Window * window, int *top, int *left, int *bottom, int *right);
-    int (*SetWindowOpacity) (_THIS, SDL_Window * window, float opacity);
     int (*SetWindowModalFor) (_THIS, SDL_Window * modal_window, SDL_Window * parent_window);
     int (*SetWindowInputFocus) (_THIS, SDL_Window * window);
     void (*ShowWindow) (_THIS, SDL_Window * window);
@@ -193,8 +186,6 @@ struct SDL_VideoDevice
     void (*SetWindowBordered) (_THIS, SDL_Window * window, SDL_bool bordered);
     void (*SetWindowResizable) (_THIS, SDL_Window * window, SDL_bool resizable);
     void (*SetWindowFullscreen) (_THIS, SDL_Window * window, SDL_VideoDisplay * display, SDL_bool fullscreen);
-    int (*SetWindowGammaRamp) (_THIS, SDL_Window * window, const Uint16 * ramp);
-    int (*GetWindowGammaRamp) (_THIS, SDL_Window * window, Uint16 * ramp);
     void (*SetWindowGrab) (_THIS, SDL_Window * window, SDL_bool grabbed);
     void (*DestroyWindow) (_THIS, SDL_Window * window);
     int (*CreateWindowFramebuffer) (_THIS, SDL_Window * window, Uint32 * format, void ** pixels, int *pitch);
@@ -252,7 +243,6 @@ struct SDL_VideoDevice
 
     /* * * */
     /* Data common to all drivers */
-    SDL_bool is_dummy;
     SDL_bool suspend_screensaver;
     int num_displays;
     SDL_VideoDisplay *displays;

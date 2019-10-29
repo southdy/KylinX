@@ -101,11 +101,6 @@ ShouldUseTextureFramebuffer()
         return SDL_TRUE;
     }
 
-    /* If this is the dummy driver there is no texture support */
-    if (_this->is_dummy) {
-        return SDL_FALSE;
-    }
-
     /* If the user has specified a software renderer we can't use a
        texture framebuffer, or renderer creation will go recursive.
      */
@@ -1253,22 +1248,15 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
         return NULL;
     }
 
-    /* Some platforms have OpenGL enabled by default */
-#if (SDL_VIDEO_OPENGL && __MACOSX__) || __IPHONEOS__ || __ANDROID__ || __NACL__
-    if (!_this->is_dummy && !(flags & SDL_WINDOW_VULKAN)) {
-        flags |= SDL_WINDOW_OPENGL;
+    flags |= SDL_WINDOW_OPENGL;
+    if (!_this->GL_CreateContext) {
+        SDL_SetError("OpenGL support is either not configured in SDL "
+                     "or not available in current SDL video driver "
+                     "(%s) or platform", _this->name);
+        return NULL;
     }
-#endif
-    if (flags & SDL_WINDOW_OPENGL) {
-        if (!_this->GL_CreateContext) {
-            SDL_SetError("OpenGL support is either not configured in SDL "
-                         "or not available in current SDL video driver "
-                         "(%s) or platform", _this->name);
-            return NULL;
-        }
-        if (SDL_GL_LoadLibrary(NULL) < 0) {
-            return NULL;
-        }
+    if (SDL_GL_LoadLibrary(NULL) < 0) {
+        return NULL;
     }
 
     /* Unless the user has specified the high-DPI disabling hint, respect the
@@ -1327,8 +1315,6 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
 
     window->flags = ((flags & CREATE_FLAGS) | SDL_WINDOW_HIDDEN);
     window->last_fullscreen_flags = window->flags;
-    window->opacity = 1.0f;
-    window->brightness = 1.0f;
     window->next = _this->windows;
     window->is_destroying = SDL_FALSE;
 
@@ -1345,23 +1331,9 @@ SDL_CreateWindow(const char *title, int x, int y, int w, int h, Uint32 flags)
     /* Clear minimized if not on windows, only windows handles it at create rather than FinishWindowCreation,
      * but it's important or window focus will get broken on windows!
      */
-#if !defined(__WIN32__)
     if (window->flags & SDL_WINDOW_MINIMIZED) {
         window->flags &= ~SDL_WINDOW_MINIMIZED;
     }
-#endif
-
-#if __WINRT__ && (NTDDI_VERSION < NTDDI_WIN10)
-    /* HACK: WinRT 8.x apps can't choose whether or not they are fullscreen
-       or not.  The user can choose this, via OS-provided UI, but this can't
-       be set programmatically.
-
-       Just look at what SDL's WinRT video backend code detected with regards
-       to fullscreen (being active, or not), and figure out a return/error code
-       from that.
-    */
-    flags = window->flags;
-#endif
 
     if (title) {
         SDL_SetWindowTitle(window, title);
@@ -1397,8 +1369,6 @@ SDL_CreateWindowFrom(const void *data)
     window->flags = SDL_WINDOW_FOREIGN;
     window->last_fullscreen_flags = window->flags;
     window->is_destroying = SDL_FALSE;
-    window->opacity = 1.0f;
-    window->brightness = 1.0f;
     window->next = _this->windows;
     if (_this->windows) {
         _this->windows->prev = window;
@@ -2151,66 +2121,6 @@ SDL_UpdateWindowSurfaceRects(SDL_Window * window, const SDL_Rect * rects,
 }
 
 int
-SDL_SetWindowBrightness(SDL_Window * window, float brightness)
-{
-    Uint16 ramp[256];
-    int status;
-
-    CHECK_WINDOW_MAGIC(window, -1);
-
-    SDL_CalculateGammaRamp(brightness, ramp);
-    status = SDL_SetWindowGammaRamp(window, ramp, ramp, ramp);
-    if (status == 0) {
-        window->brightness = brightness;
-    }
-    return status;
-}
-
-float
-SDL_GetWindowBrightness(SDL_Window * window)
-{
-    CHECK_WINDOW_MAGIC(window, 1.0f);
-
-    return window->brightness;
-}
-
-int
-SDL_SetWindowOpacity(SDL_Window * window, float opacity)
-{
-    int retval;
-    CHECK_WINDOW_MAGIC(window, -1);
-
-    if (!_this->SetWindowOpacity) {
-        return SDL_Unsupported();
-    }
-
-    if (opacity < 0.0f) {
-        opacity = 0.0f;
-    } else if (opacity > 1.0f) {
-        opacity = 1.0f;
-    }
-
-    retval = _this->SetWindowOpacity(_this, window, opacity);
-    if (retval == 0) {
-        window->opacity = opacity;
-    }
-
-    return retval;
-}
-
-int
-SDL_GetWindowOpacity(SDL_Window * window, float * out_opacity)
-{
-    CHECK_WINDOW_MAGIC(window, -1);
-
-    if (out_opacity) {
-        *out_opacity = window->opacity;
-    }
-
-    return 0;
-}
-
-int
 SDL_SetWindowModalFor(SDL_Window * modal_window, SDL_Window * parent_window)
 {
     CHECK_WINDOW_MAGIC(modal_window, -1);
@@ -2235,85 +2145,6 @@ SDL_SetWindowInputFocus(SDL_Window * window)
     return _this->SetWindowInputFocus(_this, window);
 }
 
-
-int
-SDL_SetWindowGammaRamp(SDL_Window * window, const Uint16 * red,
-                                            const Uint16 * green,
-                                            const Uint16 * blue)
-{
-    CHECK_WINDOW_MAGIC(window, -1);
-
-    if (!_this->SetWindowGammaRamp) {
-        return SDL_Unsupported();
-    }
-
-    if (!window->gamma) {
-        if (SDL_GetWindowGammaRamp(window, NULL, NULL, NULL) < 0) {
-            return -1;
-        }
-        SDL_assert(window->gamma != NULL);
-    }
-
-    if (red) {
-        SDL_memcpy(&window->gamma[0*256], red, 256*sizeof(Uint16));
-    }
-    if (green) {
-        SDL_memcpy(&window->gamma[1*256], green, 256*sizeof(Uint16));
-    }
-    if (blue) {
-        SDL_memcpy(&window->gamma[2*256], blue, 256*sizeof(Uint16));
-    }
-    if (window->flags & SDL_WINDOW_INPUT_FOCUS) {
-        return _this->SetWindowGammaRamp(_this, window, window->gamma);
-    } else {
-        return 0;
-    }
-}
-
-int
-SDL_GetWindowGammaRamp(SDL_Window * window, Uint16 * red,
-                                            Uint16 * green,
-                                            Uint16 * blue)
-{
-    CHECK_WINDOW_MAGIC(window, -1);
-
-    if (!window->gamma) {
-        int i;
-
-        window->gamma = (Uint16 *)SDL_malloc(256*6*sizeof(Uint16));
-        if (!window->gamma) {
-            return SDL_OutOfMemory();
-        }
-        window->saved_gamma = window->gamma + 3*256;
-
-        if (_this->GetWindowGammaRamp) {
-            if (_this->GetWindowGammaRamp(_this, window, window->gamma) < 0) {
-                return -1;
-            }
-        } else {
-            /* Create an identity gamma ramp */
-            for (i = 0; i < 256; ++i) {
-                Uint16 value = (Uint16)((i << 8) | i);
-
-                window->gamma[0*256+i] = value;
-                window->gamma[1*256+i] = value;
-                window->gamma[2*256+i] = value;
-            }
-        }
-        SDL_memcpy(window->saved_gamma, window->gamma, 3*256*sizeof(Uint16));
-    }
-
-    if (red) {
-        SDL_memcpy(red, &window->gamma[0*256], 256*sizeof(Uint16));
-    }
-    if (green) {
-        SDL_memcpy(green, &window->gamma[1*256], 256*sizeof(Uint16));
-    }
-    if (blue) {
-        SDL_memcpy(blue, &window->gamma[2*256], 256*sizeof(Uint16));
-    }
-    return 0;
-}
 
 void
 SDL_UpdateWindowGrab(SDL_Window * window)
@@ -2434,10 +2265,6 @@ SDL_OnWindowLeave(SDL_Window * window)
 void
 SDL_OnWindowFocusGained(SDL_Window * window)
 {
-    if (window->gamma && _this->SetWindowGammaRamp) {
-        _this->SetWindowGammaRamp(_this, window, window->gamma);
-    }
-
     SDL_UpdateWindowGrab(window);
 }
 
@@ -2463,10 +2290,6 @@ ShouldMinimizeOnFocusLoss(SDL_Window * window)
 void
 SDL_OnWindowFocusLost(SDL_Window * window)
 {
-    if (window->gamma && _this->SetWindowGammaRamp) {
-        _this->SetWindowGammaRamp(_this, window, window->saved_gamma);
-    }
-
     SDL_UpdateWindowGrab(window);
 
     if (ShouldMinimizeOnFocusLoss(window)) {
@@ -2541,7 +2364,6 @@ SDL_DestroyWindow(SDL_Window * window)
     /* Free memory associated with the window */
     SDL_free(window->title);
     SDL_FreeSurface(window->icon);
-    SDL_free(window->gamma);
     while (window->data) {
         SDL_WindowUserData *data = window->data;
 
@@ -3409,7 +3231,7 @@ SDL_IsScreenKeyboardShown(SDL_Window *window)
 #endif
 
 
-#if SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_WINRT || SDL_VIDEO_DRIVER_COCOA || SDL_VIDEO_DRIVER_UIKIT || SDL_VIDEO_DRIVER_X11
+#if SDL_VIDEO_DRIVER_UIKIT
 static SDL_bool SDL_MessageboxValidForDriver(const SDL_MessageBoxData *messageboxdata, SDL_SYSWM_TYPE drivertype)
 {
     SDL_SysWMinfo info;

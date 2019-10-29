@@ -898,53 +898,6 @@ extern DECLSPEC SDL_bool SDLCALL SDL_GetWindowGrab(SDL_Window * window);
 extern DECLSPEC SDL_Window * SDLCALL SDL_GetGrabbedWindow(void);
 
 /**
- *  \brief Set the brightness (gamma correction) for a window.
- *
- *  \return 0 on success, or -1 if setting the brightness isn't supported.
- *
- *  \sa SDL_GetWindowBrightness()
- *  \sa SDL_SetWindowGammaRamp()
- */
-extern DECLSPEC int SDLCALL SDL_SetWindowBrightness(SDL_Window * window, float brightness);
-
-/**
- *  \brief Get the brightness (gamma correction) for a window.
- *
- *  \return The last brightness value passed to SDL_SetWindowBrightness()
- *
- *  \sa SDL_SetWindowBrightness()
- */
-extern DECLSPEC float SDLCALL SDL_GetWindowBrightness(SDL_Window * window);
-
-/**
- *  \brief Set the opacity for a window
- *
- *  \param window The window which will be made transparent or opaque
- *  \param opacity Opacity (0.0f - transparent, 1.0f - opaque) This will be
- *                 clamped internally between 0.0f and 1.0f.
- *
- *  \return 0 on success, or -1 if setting the opacity isn't supported.
- *
- *  \sa SDL_GetWindowOpacity()
- */
-extern DECLSPEC int SDLCALL SDL_SetWindowOpacity(SDL_Window * window, float opacity);
-
-/**
- *  \brief Get the opacity of a window.
- *
- *  If transparency isn't supported on this platform, opacity will be reported
- *  as 1.0f without error.
- *
- *  \param window The window in question.
- *  \param out_opacity Opacity (0.0f - transparent, 1.0f - opaque)
- *
- *  \return 0 on success, or -1 on error (invalid window, etc).
- *
- *  \sa SDL_SetWindowOpacity()
- */
-extern DECLSPEC int SDLCALL SDL_GetWindowOpacity(SDL_Window * window, float * out_opacity);
-
-/**
  *  \brief Sets the window as a modal for another window (TODO: reconsider this function and/or its name)
  *
  *  \param modal_window The window that should be modal
@@ -967,49 +920,6 @@ extern DECLSPEC int SDLCALL SDL_SetWindowModalFor(SDL_Window * modal_window, SDL
  *  \sa SDL_RaiseWindow()
  */
 extern DECLSPEC int SDLCALL SDL_SetWindowInputFocus(SDL_Window * window);
-
-/**
- *  \brief Set the gamma ramp for a window.
- *
- *  \param window The window for which the gamma ramp should be set.
- *  \param red The translation table for the red channel, or NULL.
- *  \param green The translation table for the green channel, or NULL.
- *  \param blue The translation table for the blue channel, or NULL.
- *
- *  \return 0 on success, or -1 if gamma ramps are unsupported.
- *
- *  Set the gamma translation table for the red, green, and blue channels
- *  of the video hardware.  Each table is an array of 256 16-bit quantities,
- *  representing a mapping between the input and output for that channel.
- *  The input is the index into the array, and the output is the 16-bit
- *  gamma value at that index, scaled to the output color precision.
- *
- *  \sa SDL_GetWindowGammaRamp()
- */
-extern DECLSPEC int SDLCALL SDL_SetWindowGammaRamp(SDL_Window * window,
-                                                   const Uint16 * red,
-                                                   const Uint16 * green,
-                                                   const Uint16 * blue);
-
-/**
- *  \brief Get the gamma ramp for a window.
- *
- *  \param window The window from which the gamma ramp should be queried.
- *  \param red   A pointer to a 256 element array of 16-bit quantities to hold
- *               the translation table for the red channel, or NULL.
- *  \param green A pointer to a 256 element array of 16-bit quantities to hold
- *               the translation table for the green channel, or NULL.
- *  \param blue  A pointer to a 256 element array of 16-bit quantities to hold
- *               the translation table for the blue channel, or NULL.
- *
- *  \return 0 on success, or -1 if gamma ramps are unsupported.
- *
- *  \sa SDL_SetWindowGammaRamp()
- */
-extern DECLSPEC int SDLCALL SDL_GetWindowGammaRamp(SDL_Window * window,
-                                                   Uint16 * red,
-                                                   Uint16 * green,
-                                                   Uint16 * blue);
 
 /**
  *  \brief Destroy a window.
