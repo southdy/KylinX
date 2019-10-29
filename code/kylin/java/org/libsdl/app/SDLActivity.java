@@ -40,21 +40,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     public static boolean mIsResumedCalled, mHasFocus;
     public static final boolean mHasMultiWindow = (Build.VERSION.SDK_INT >= 24);
 
-    // Cursor types
-    private static final int SDL_SYSTEM_CURSOR_NONE = -1;
-    private static final int SDL_SYSTEM_CURSOR_ARROW = 0;
-    private static final int SDL_SYSTEM_CURSOR_IBEAM = 1;
-    private static final int SDL_SYSTEM_CURSOR_WAIT = 2;
-    private static final int SDL_SYSTEM_CURSOR_CROSSHAIR = 3;
-    private static final int SDL_SYSTEM_CURSOR_WAITARROW = 4;
-    private static final int SDL_SYSTEM_CURSOR_SIZENWSE = 5;
-    private static final int SDL_SYSTEM_CURSOR_SIZENESW = 6;
-    private static final int SDL_SYSTEM_CURSOR_SIZEWE = 7;
-    private static final int SDL_SYSTEM_CURSOR_SIZENS = 8;
-    private static final int SDL_SYSTEM_CURSOR_SIZEALL = 9;
-    private static final int SDL_SYSTEM_CURSOR_NO = 10;
-    private static final int SDL_SYSTEM_CURSOR_HAND = 11;
-
     protected static final int SDL_ORIENTATION_UNKNOWN = 0;
     protected static final int SDL_ORIENTATION_LANDSCAPE = 1;
     protected static final int SDL_ORIENTATION_LANDSCAPE_FLIPPED = 2;
@@ -81,8 +66,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     protected static boolean mScreenKeyboardShown;
     protected static ViewGroup mLayout;
     protected static SDLClipboardHandler mClipboardHandler;
-    protected static Hashtable<Integer, PointerIcon> mCursors;
-    protected static int mLastCursorID;
 
     // This is what SDL runs in. It invokes SDL_main(), eventually
     protected static Thread mSDLThread;
@@ -149,8 +132,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         mTextEdit = null;
         mLayout = null;
         mClipboardHandler = null;
-        mCursors = new Hashtable<Integer, PointerIcon>();
-        mLastCursorID = 0;
         mSDLThread = null;
         mBrokenLibraries = false;
         mIsResumedCalled = false;
