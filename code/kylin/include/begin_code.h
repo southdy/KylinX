@@ -90,35 +90,6 @@
 #endif
 #endif /* SDLCALL */
 
-/* Removed DECLSPEC on Symbian OS because SDL cannot be a DLL in EPOC */
-#ifdef __SYMBIAN32__
-#undef DECLSPEC
-#define DECLSPEC
-#endif /* __SYMBIAN32__ */
-
-/* Force structure packing at 4 byte alignment.
-   This is necessary if the header is included in code which has structure
-   packing set to an alternate value, say for loading structures from disk.
-   The packing is reset to the previous value in close_code.h
- */
-#if defined(_MSC_VER) || defined(__MWERKS__) || defined(__BORLANDC__)
-#ifdef _MSC_VER
-#pragma warning(disable: 4103)
-#endif
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wpragma-pack"
-#endif
-#ifdef __BORLANDC__
-#pragma nopackwarning
-#endif
-#ifdef _M_X64
-/* Use 8-byte alignment on 64-bit architectures, so pointers are aligned */
-#pragma pack(push,8)
-#else
-#pragma pack(push,4)
-#endif
-#endif /* Compiler needs structure packing set */
-
 #ifndef SDL_INLINE
 #if defined(__GNUC__)
 #define SDL_INLINE __inline__

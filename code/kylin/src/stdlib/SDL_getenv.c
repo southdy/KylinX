@@ -33,7 +33,6 @@
 
 /* Put a variable into the environment */
 /* Note: Name may not contain a '=' character. (Reference: http://www.unix.com/man-page/Linux/3/setenv/) */
-#if defined(HAVE_SETENV)
 int
 SDL_setenv(const char *name, const char *value, int overwrite)
 {
@@ -44,105 +43,8 @@ SDL_setenv(const char *name, const char *value, int overwrite)
     
     return setenv(name, value, overwrite);
 }
-/* We have a real environment table, but no real setenv? Fake it w/ putenv. */
-#elif (defined(HAVE_GETENV) && defined(HAVE_PUTENV) && !defined(HAVE_SETENV))
-int
-SDL_setenv(const char *name, const char *value, int overwrite)
-{
-    size_t len;
-    char *new_variable;
-
-    /* Input validation */
-    if (!name || SDL_strlen(name) == 0 || SDL_strchr(name, '=') != NULL || !value) {
-        return (-1);
-    }
-    
-    if (getenv(name) != NULL) {
-        if (overwrite) {
-            unsetenv(name);
-        } else {
-            return 0;  /* leave the existing one there. */
-        }
-    }
-
-    /* This leaks. Sorry. Get a better OS so we don't have to do this. */
-    len = SDL_strlen(name) + SDL_strlen(value) + 2;
-    new_variable = (char *) SDL_malloc(len);
-    if (!new_variable) {
-        return (-1);
-    }
-
-    SDL_snprintf(new_variable, len, "%s=%s", name, value);
-    return putenv(new_variable);
-}
-#else /* roll our own */
-static char **SDL_env = (char **) 0;
-int
-SDL_setenv(const char *name, const char *value, int overwrite)
-{
-    int added;
-    int len, i;
-    char **new_env;
-    char *new_variable;
-
-    /* Input validation */
-    if (!name || SDL_strlen(name) == 0 || SDL_strchr(name, '=') != NULL || !value) {
-        return (-1);
-    }
-
-    /* See if it already exists */
-    if (!overwrite && SDL_getenv(name)) {
-        return 0;
-    }
-
-    /* Allocate memory for the variable */
-    len = SDL_strlen(name) + SDL_strlen(value) + 2;
-    new_variable = (char *) SDL_malloc(len);
-    if (!new_variable) {
-        return (-1);
-    }
-
-    SDL_snprintf(new_variable, len, "%s=%s", name, value);
-    value = new_variable + SDL_strlen(name) + 1;
-    name = new_variable;
-
-    /* Actually put it into the environment */
-    added = 0;
-    i = 0;
-    if (SDL_env) {
-        /* Check to see if it's already there... */
-        len = (value - name);
-        for (; SDL_env[i]; ++i) {
-            if (SDL_strncmp(SDL_env[i], name, len) == 0) {
-                break;
-            }
-        }
-        /* If we found it, just replace the entry */
-        if (SDL_env[i]) {
-            SDL_free(SDL_env[i]);
-            SDL_env[i] = new_variable;
-            added = 1;
-        }
-    }
-
-    /* Didn't find it in the environment, expand and add */
-    if (!added) {
-        new_env = SDL_realloc(SDL_env, (i + 2) * sizeof(char *));
-        if (new_env) {
-            SDL_env = new_env;
-            SDL_env[i++] = new_variable;
-            SDL_env[i++] = (char *) 0;
-            added = 1;
-        } else {
-            SDL_free(new_variable);
-        }
-    }
-    return (added ? 0 : -1);
-}
-#endif
 
 /* Retrieve a variable named "name" from the environment */
-#if defined(HAVE_GETENV)
 char *
 SDL_getenv(const char *name)
 {
@@ -158,31 +60,6 @@ SDL_getenv(const char *name)
 
     return getenv(name);
 }
-#else
-char *
-SDL_getenv(const char *name)
-{
-    int len, i;
-    char *value;
-
-    /* Input validation */
-    if (!name || SDL_strlen(name)==0) {
-        return NULL;
-    }
-    
-    value = (char *) 0;
-    if (SDL_env) {
-        len = SDL_strlen(name);
-        for (i = 0; SDL_env[i] && !value; ++i) {
-            if ((SDL_strncmp(SDL_env[i], name, len) == 0) &&
-                (SDL_env[i][len] == '=')) {
-                value = &SDL_env[i][len + 1];
-            }
-        }
-    }
-    return value;
-}
-#endif
 
 
 #ifdef TEST_MAIN

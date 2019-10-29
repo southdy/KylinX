@@ -45,49 +45,6 @@ struct SDL_SysWMinfo;
 
 #if !defined(SDL_PROTOTYPES_ONLY)
 
-#if defined(SDL_VIDEO_DRIVER_WINDOWS)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX   /* don't define min() and max(). */
-#define NOMINMAX
-#endif
-#include <windows.h>
-#endif
-
-#if defined(SDL_VIDEO_DRIVER_WINRT)
-#include <Inspectable.h>
-#endif
-
-/* This is the structure for custom window manager events */
-#if defined(SDL_VIDEO_DRIVER_X11)
-#if defined(__APPLE__) && defined(__MACH__)
-/* conflicts with Quickdraw.h */
-#define Cursor X11Cursor
-#endif
-
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-
-#if defined(__APPLE__) && defined(__MACH__)
-/* matches the re-define above */
-#undef Cursor
-#endif
-
-#endif /* defined(SDL_VIDEO_DRIVER_X11) */
-
-#if defined(SDL_VIDEO_DRIVER_DIRECTFB)
-#include <directfb.h>
-#endif
-
-#if defined(SDL_VIDEO_DRIVER_COCOA)
-#ifdef __OBJC__
-@class NSWindow;
-#else
-typedef struct _NSWindow NSWindow;
-#endif
-#endif
-
 #if defined(SDL_VIDEO_DRIVER_UIKIT)
 #ifdef __OBJC__
 #include <UIKit/UIKit.h>
@@ -103,9 +60,6 @@ typedef struct ANativeWindow ANativeWindow;
 typedef void *EGLSurface;
 #endif
 
-#if defined(SDL_VIDEO_DRIVER_VIVANTE)
-#include "SDL_egl.h"
-#endif
 #endif /* SDL_PROTOTYPES_ONLY */
 
 
@@ -122,17 +76,8 @@ extern "C" {
 typedef enum
 {
     SDL_SYSWM_UNKNOWN,
-    SDL_SYSWM_WINDOWS,
-    SDL_SYSWM_X11,
-    SDL_SYSWM_DIRECTFB,
-    SDL_SYSWM_COCOA,
     SDL_SYSWM_UIKIT,
-    SDL_SYSWM_WAYLAND,
-    SDL_SYSWM_MIR,  /* no longer available, left for API/ABI compatibility. Remove in 2.1! */
-    SDL_SYSWM_WINRT,
-    SDL_SYSWM_ANDROID,
-    SDL_SYSWM_VIVANTE,
-    SDL_SYSWM_OS2
+    SDL_SYSWM_ANDROID
 } SDL_SYSWM_TYPE;
 
 /**
@@ -144,47 +89,12 @@ struct SDL_SysWMmsg
     SDL_SYSWM_TYPE subsystem;
     union
     {
-#if defined(SDL_VIDEO_DRIVER_WINDOWS)
-        struct {
-            HWND hwnd;                  /**< The window for the message */
-            UINT msg;                   /**< The type of message */
-            WPARAM wParam;              /**< WORD message parameter */
-            LPARAM lParam;              /**< LONG message parameter */
-        } win;
-#endif
-#if defined(SDL_VIDEO_DRIVER_X11)
-        struct {
-            XEvent event;
-        } x11;
-#endif
-#if defined(SDL_VIDEO_DRIVER_DIRECTFB)
-        struct {
-            DFBEvent event;
-        } dfb;
-#endif
-#if defined(SDL_VIDEO_DRIVER_COCOA)
-        struct
-        {
-            /* Latest version of Xcode clang complains about empty structs in C v. C++:
-                 error: empty struct has size 0 in C, size 1 in C++
-             */
-            int dummy;
-            /* No Cocoa window events yet */
-        } cocoa;
-#endif
 #if defined(SDL_VIDEO_DRIVER_UIKIT)
         struct
         {
             int dummy;
             /* No UIKit window events yet */
         } uikit;
-#endif
-#if defined(SDL_VIDEO_DRIVER_VIVANTE)
-        struct
-        {
-            int dummy;
-            /* No Vivante window events yet */
-        } vivante;
 #endif
         /* Can't have an empty union */
         int dummy;
@@ -203,45 +113,6 @@ struct SDL_SysWMinfo
     SDL_SYSWM_TYPE subsystem;
     union
     {
-#if defined(SDL_VIDEO_DRIVER_WINDOWS)
-        struct
-        {
-            HWND window;                /**< The window handle */
-            HDC hdc;                    /**< The window device context */
-            HINSTANCE hinstance;        /**< The instance handle */
-        } win;
-#endif
-#if defined(SDL_VIDEO_DRIVER_WINRT)
-        struct
-        {
-            IInspectable * window;      /**< The WinRT CoreWindow */
-        } winrt;
-#endif
-#if defined(SDL_VIDEO_DRIVER_X11)
-        struct
-        {
-            Display *display;           /**< The X11 display */
-            Window window;              /**< The X11 window */
-        } x11;
-#endif
-#if defined(SDL_VIDEO_DRIVER_DIRECTFB)
-        struct
-        {
-            IDirectFB *dfb;             /**< The directfb main interface */
-            IDirectFBWindow *window;    /**< The directfb window handle */
-            IDirectFBSurface *surface;  /**< The directfb client surface */
-        } dfb;
-#endif
-#if defined(SDL_VIDEO_DRIVER_COCOA)
-        struct
-        {
-#if defined(__OBJC__) && defined(__has_feature) && __has_feature(objc_arc)
-            NSWindow __unsafe_unretained *window; /**< The Cocoa window */
-#else
-            NSWindow *window;                     /**< The Cocoa window */
-#endif
-        } cocoa;
-#endif
 #if defined(SDL_VIDEO_DRIVER_UIKIT)
         struct
         {
@@ -255,22 +126,6 @@ struct SDL_SysWMinfo
             GLuint resolveFramebuffer; /**< The Framebuffer Object which holds the resolve color Renderbuffer, when MSAA is used. */
         } uikit;
 #endif
-#if defined(SDL_VIDEO_DRIVER_WAYLAND)
-        struct
-        {
-            struct wl_display *display;            /**< Wayland display */
-            struct wl_surface *surface;            /**< Wayland surface */
-            struct wl_shell_surface *shell_surface; /**< Wayland shell_surface (window manager handle) */
-        } wl;
-#endif
-#if defined(SDL_VIDEO_DRIVER_MIR)  /* no longer available, left for API/ABI compatibility. Remove in 2.1! */
-        struct
-        {
-            void *connection;  /**< Mir display server connection */
-            void *surface;  /**< Mir surface */
-        } mir;
-#endif
-
 #if defined(SDL_VIDEO_DRIVER_ANDROID)
         struct
         {
@@ -278,15 +133,6 @@ struct SDL_SysWMinfo
             EGLSurface surface;
         } android;
 #endif
-
-#if defined(SDL_VIDEO_DRIVER_VIVANTE)
-        struct
-        {
-            EGLNativeDisplayType display;
-            EGLNativeWindowType window;
-        } vivante;
-#endif
-
         /* Make sure this union is always 64 bytes (8 64-bit pointers). */
         /* Be careful not to overflow this if you add a new target! */
         Uint8 dummy[64];

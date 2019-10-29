@@ -57,13 +57,6 @@ typedef struct SDL_Finger
     float pressure;
 } SDL_Finger;
 
-/* Used as the device ID for mouse events simulated with touch input */
-#define SDL_TOUCH_MOUSEID ((Uint32)-1)
-
-/* Used as the SDL_TouchID for touch events simulated with mouse input */
-#define SDL_MOUSE_TOUCHID ((Sint64)-1)
-
-
 /* Function prototypes */
 
 /**
