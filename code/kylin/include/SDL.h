@@ -48,7 +48,6 @@
 #include "SDL_render.h"
 #include "SDL_rwops.h"
 #include "SDL_sensor.h"
-#include "SDL_shape.h"
 #include "SDL_system.h"
 #include "SDL_thread.h"
 #include "SDL_timer.h"

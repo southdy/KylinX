@@ -25,21 +25,11 @@
 
 #include "../SDL_internal.h"
 
-#if defined(__WIN32__)
-#include "../core/windows/SDL_windows.h"
-#endif
-
 #if defined(__ANDROID__)
 #include "../core/android/SDL_android.h"
 #endif
 
 #include "SDL_stdinc.h"
-
-#if defined(__WIN32__) && (!defined(HAVE_SETENV) || !defined(HAVE_GETENV))
-/* Note this isn't thread-safe! */
-static char *SDL_envmem = NULL; /* Ugh, memory leak */
-static size_t SDL_envmemlen = 0;
-#endif
 
 /* Put a variable into the environment */
 /* Note: Name may not contain a '=' character. (Reference: http://www.unix.com/man-page/Linux/3/setenv/) */
@@ -53,25 +43,6 @@ SDL_setenv(const char *name, const char *value, int overwrite)
     }
     
     return setenv(name, value, overwrite);
-}
-#elif defined(__WIN32__)
-int
-SDL_setenv(const char *name, const char *value, int overwrite)
-{
-    /* Input validation */
-    if (!name || SDL_strlen(name) == 0 || SDL_strchr(name, '=') != NULL || !value) {
-        return (-1);
-    }
-    
-    if (!overwrite) {
-        if (GetEnvironmentVariableA(name, NULL, 0) > 0) {
-            return 0;  /* asked not to overwrite existing value. */
-        }
-    }
-    if (!SetEnvironmentVariableA(name, *value ? value : NULL)) {
-        return -1;
-    }
-    return 0;
 }
 /* We have a real environment table, but no real setenv? Fake it w/ putenv. */
 #elif (defined(HAVE_GETENV) && defined(HAVE_PUTENV) && !defined(HAVE_SETENV))
@@ -186,33 +157,6 @@ SDL_getenv(const char *name)
     }
 
     return getenv(name);
-}
-#elif defined(__WIN32__)
-char *
-SDL_getenv(const char *name)
-{
-    size_t bufferlen;
-
-    /* Input validation */
-    if (!name || SDL_strlen(name)==0) {
-        return NULL;
-    }
-    
-    bufferlen =
-        GetEnvironmentVariableA(name, SDL_envmem, (DWORD) SDL_envmemlen);
-    if (bufferlen == 0) {
-        return NULL;
-    }
-    if (bufferlen > SDL_envmemlen) {
-        char *newmem = (char *) SDL_realloc(SDL_envmem, bufferlen);
-        if (newmem == NULL) {
-            return NULL;
-        }
-        SDL_envmem = newmem;
-        SDL_envmemlen = bufferlen;
-        GetEnvironmentVariableA(name, SDL_envmem, (DWORD) SDL_envmemlen);
-    }
-    return SDL_envmem;
 }
 #else
 char *

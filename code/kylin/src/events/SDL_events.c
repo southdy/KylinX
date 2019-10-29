@@ -160,7 +160,6 @@ SDL_LogEvent(const SDL_Event *event)
                 SDL_WINDOWEVENT_CASE(SDL_WINDOWEVENT_FOCUS_LOST);
                 SDL_WINDOWEVENT_CASE(SDL_WINDOWEVENT_CLOSE);
                 SDL_WINDOWEVENT_CASE(SDL_WINDOWEVENT_TAKE_FOCUS);
-                SDL_WINDOWEVENT_CASE(SDL_WINDOWEVENT_HIT_TEST);
                 #undef SDL_WINDOWEVENT_CASE
                 default: SDL_strlcpy(name2, "UNKNOWN (bug? fixme?)", sizeof (name2)); break;
             }
@@ -810,8 +809,6 @@ SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
 Uint8
 SDL_EventState(Uint32 type, int state)
 {
-    const SDL_bool isdnd = ((state == SDL_DISABLE) || (state == SDL_ENABLE)) &&
-                           ((type == SDL_DROPFILE) || (type == SDL_DROPTEXT));
     Uint8 current_state;
     Uint8 hi = ((type >> 8) & 0xff);
     Uint8 lo = (type & 0xff);
@@ -845,12 +842,6 @@ SDL_EventState(Uint32 type, int state)
             /* Querying state... */
             break;
         }
-    }
-
-    /* turn off drag'n'drop support if we've disabled the events.
-       This might change some UI details at the OS level. */
-    if (isdnd) {
-        SDL_ToggleDragAndDropSupport();
     }
 
     return current_state;

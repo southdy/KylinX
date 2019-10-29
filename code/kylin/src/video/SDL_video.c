@@ -1202,43 +1202,9 @@ SDL_UpdateFullscreenMode(SDL_Window * window, SDL_bool fullscreen)
 #define CREATE_FLAGS \
     (SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_SKIP_TASKBAR | SDL_WINDOW_POPUP_MENU | SDL_WINDOW_UTILITY | SDL_WINDOW_TOOLTIP | SDL_WINDOW_VULKAN | SDL_WINDOW_MINIMIZED)
 
-static SDL_INLINE SDL_bool
-IsAcceptingDragAndDrop(void)
-{
-    if ((SDL_GetEventState(SDL_DROPFILE) == SDL_ENABLE) ||
-        (SDL_GetEventState(SDL_DROPTEXT) == SDL_ENABLE)) {
-        return SDL_TRUE;
-    }
-    return SDL_FALSE;
-}
-
-/* prepare a newly-created window */
-static SDL_INLINE void
-PrepareDragAndDropSupport(SDL_Window *window)
-{
-    if (_this->AcceptDragAndDrop) {
-        _this->AcceptDragAndDrop(window, IsAcceptingDragAndDrop());
-    }
-}
-
-/* toggle d'n'd for all existing windows. */
-void
-SDL_ToggleDragAndDropSupport(void)
-{
-    if (_this && _this->AcceptDragAndDrop) {
-        const SDL_bool enable = IsAcceptingDragAndDrop();
-        SDL_Window *window;
-        for (window = _this->windows; window; window = window->next) {
-            _this->AcceptDragAndDrop(window, enable);
-        }
-    }
-}
-
 static void
 SDL_FinishWindowCreation(SDL_Window *window, Uint32 flags)
 {
-    PrepareDragAndDropSupport(window);
-
     if (flags & SDL_WINDOW_MAXIMIZED) {
         SDL_MaximizeWindow(window);
     }
@@ -1444,8 +1410,6 @@ SDL_CreateWindowFrom(const void *data)
         return NULL;
     }
 
-    PrepareDragAndDropSupport(window);
-
     return window;
 }
 
@@ -1535,10 +1499,6 @@ SDL_RecreateWindow(SDL_Window * window, Uint32 flags)
 
     if (_this->SetWindowIcon && window->icon) {
         _this->SetWindowIcon(_this, window, window->icon);
-    }
-
-    if (window->hit_test) {
-        _this->SetWindowHitTest(window, SDL_TRUE);
     }
 
     SDL_FinishWindowCreation(window, flags);
@@ -2488,14 +2448,6 @@ ShouldMinimizeOnFocusLoss(SDL_Window * window)
         return SDL_FALSE;
     }
 
-#ifdef __MACOSX__
-    if (SDL_strcmp(_this->name, "cocoa") == 0) {  /* don't do this for X11, etc */
-        if (Cocoa_IsWindowInFullscreenSpace(window)) {
-            return SDL_FALSE;
-        }
-    }
-#endif
-
 #ifdef __ANDROID__
     {
         extern SDL_bool Android_JNI_ShouldMinimizeOnFocusLoss(void);
@@ -3357,105 +3309,6 @@ SDL_GL_DeleteContext(SDL_GLContext context)
     _this->GL_DeleteContext(_this, context);
 }
 
-#if 0                           /* FIXME */
-/*
- * Utility function used by SDL_WM_SetIcon(); flags & 1 for color key, flags
- * & 2 for alpha channel.
- */
-static void
-CreateMaskFromColorKeyOrAlpha(SDL_Surface * icon, Uint8 * mask, int flags)
-{
-    int x, y;
-    Uint32 colorkey;
-#define SET_MASKBIT(icon, x, y, mask) \
-    mask[(y*((icon->w+7)/8))+(x/8)] &= ~(0x01<<(7-(x%8)))
-
-    colorkey = icon->format->colorkey;
-    switch (icon->format->BytesPerPixel) {
-    case 1:
-        {
-            Uint8 *pixels;
-            for (y = 0; y < icon->h; ++y) {
-                pixels = (Uint8 *) icon->pixels + y * icon->pitch;
-                for (x = 0; x < icon->w; ++x) {
-                    if (*pixels++ == colorkey) {
-                        SET_MASKBIT(icon, x, y, mask);
-                    }
-                }
-            }
-        }
-        break;
-
-    case 2:
-        {
-            Uint16 *pixels;
-            for (y = 0; y < icon->h; ++y) {
-                pixels = (Uint16 *) icon->pixels + y * icon->pitch / 2;
-                for (x = 0; x < icon->w; ++x) {
-                    if ((flags & 1) && *pixels == colorkey) {
-                        SET_MASKBIT(icon, x, y, mask);
-                    } else if ((flags & 2)
-                               && (*pixels & icon->format->Amask) == 0) {
-                        SET_MASKBIT(icon, x, y, mask);
-                    }
-                    pixels++;
-                }
-            }
-        }
-        break;
-
-    case 4:
-        {
-            Uint32 *pixels;
-            for (y = 0; y < icon->h; ++y) {
-                pixels = (Uint32 *) icon->pixels + y * icon->pitch / 4;
-                for (x = 0; x < icon->w; ++x) {
-                    if ((flags & 1) && *pixels == colorkey) {
-                        SET_MASKBIT(icon, x, y, mask);
-                    } else if ((flags & 2)
-                               && (*pixels & icon->format->Amask) == 0) {
-                        SET_MASKBIT(icon, x, y, mask);
-                    }
-                    pixels++;
-                }
-            }
-        }
-        break;
-    }
-}
-
-/*
- * Sets the window manager icon for the display window.
- */
-void
-SDL_WM_SetIcon(SDL_Surface * icon, Uint8 * mask)
-{
-    if (icon && _this->SetIcon) {
-        /* Generate a mask if necessary, and create the icon! */
-        if (mask == NULL) {
-            int mask_len = icon->h * (icon->w + 7) / 8;
-            int flags = 0;
-            mask = (Uint8 *) SDL_malloc(mask_len);
-            if (mask == NULL) {
-                return;
-            }
-            SDL_memset(mask, ~0, mask_len);
-            if (icon->flags & SDL_SRCCOLORKEY)
-                flags |= 1;
-            if (icon->flags & SDL_SRCALPHA)
-                flags |= 2;
-            if (flags) {
-                CreateMaskFromColorKeyOrAlpha(icon, mask, flags);
-            }
-            _this->SetIcon(_this, icon, mask);
-            SDL_free(mask);
-        } else {
-            _this->SetIcon(_this, icon, mask);
-        }
-    }
-}
-#endif
-
 SDL_bool
 SDL_GetWindowWMInfo(SDL_Window * window, struct SDL_SysWMinfo *info)
 {
@@ -3644,29 +3497,6 @@ SDL_ShowSimpleMessageBox(Uint32 flags, const char *title, const char *message, S
     button.text = "OK";
 
     return SDL_ShowMessageBox(&data, NULL);
-}
-
-SDL_bool
-SDL_ShouldAllowTopmost(void)
-{
-    return SDL_GetHintBoolean(SDL_HINT_ALLOW_TOPMOST, SDL_TRUE);
-}
-
-int
-SDL_SetWindowHitTest(SDL_Window * window, SDL_HitTest callback, void *userdata)
-{
-    CHECK_WINDOW_MAGIC(window, -1);
-
-    if (!_this->SetWindowHitTest) {
-        return SDL_Unsupported();
-    } else if (_this->SetWindowHitTest(window, callback != NULL) == -1) {
-        return -1;
-    }
-
-    window->hit_test = callback;
-    window->hit_test_data = userdata;
-
-    return 0;
 }
 
 float

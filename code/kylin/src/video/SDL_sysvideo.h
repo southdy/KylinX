@@ -24,41 +24,12 @@
 #define SDL_sysvideo_h_
 
 #include "SDL_messagebox.h"
-#include "SDL_shape.h"
 #include "SDL_thread.h"
 
 /* The SDL video driver */
 
-typedef struct SDL_WindowShaper SDL_WindowShaper;
-typedef struct SDL_ShapeDriver SDL_ShapeDriver;
 typedef struct SDL_VideoDisplay SDL_VideoDisplay;
 typedef struct SDL_VideoDevice SDL_VideoDevice;
-
-/* Define the SDL window-shaper structure */
-struct SDL_WindowShaper
-{
-    /* The window associated with the shaper */
-    SDL_Window *window;
-
-    /* The user's specified coordinates for the window, for once we give it a shape. */
-    Uint32 userx,usery;
-
-    /* The parameters for shape calculation. */
-    SDL_WindowShapeMode mode;
-
-    /* Has this window been assigned a shape? */
-    SDL_bool hasshape;
-
-    void *driverdata;
-};
-
-/* Define the SDL shape driver structure */
-struct SDL_ShapeDriver
-{
-    SDL_WindowShaper *(*CreateShaper)(SDL_Window * window);
-    int (*SetWindowShape)(SDL_WindowShaper *shaper,SDL_Surface *shape,SDL_WindowShapeMode *shape_mode);
-    int (*ResizeWindowShape)(SDL_Window *window);
-};
 
 typedef struct SDL_WindowUserData
 {
@@ -98,11 +69,6 @@ struct SDL_Window
     SDL_bool is_hiding;
     SDL_bool is_destroying;
     SDL_bool is_dropping;       /* drag/drop in progress, expecting SDL_SendDropComplete(). */
-
-    SDL_WindowShaper *shaper;
-
-    SDL_HitTest hit_test;
-    void *hit_test_data;
 
     SDL_WindowUserData *data;
 
@@ -236,12 +202,6 @@ struct SDL_VideoDevice
     void (*DestroyWindowFramebuffer) (_THIS, SDL_Window * window);
     void (*OnWindowEnter) (_THIS, SDL_Window * window);
 
-    /* * * */
-    /*
-     * Shaped-window functions
-     */
-    SDL_ShapeDriver shape_driver;
-
     /* Get some platform dependent window information */
     SDL_bool(*GetWindowWMInfo) (_THIS, SDL_Window * window,
                                 struct SDL_SysWMinfo * info);
@@ -289,12 +249,6 @@ struct SDL_VideoDevice
 
     /* MessageBox */
     int (*ShowMessageBox) (_THIS, const SDL_MessageBoxData *messageboxdata, int *buttonid);
-
-    /* Hit-testing */
-    int (*SetWindowHitTest)(SDL_Window * window, SDL_bool enabled);
-
-    /* Tell window that app enabled drag'n'drop events */
-    void (*AcceptDragAndDrop)(SDL_Window * window, SDL_bool accept);
 
     /* * * */
     /* Data common to all drivers */
@@ -407,8 +361,6 @@ extern void SDL_OnWindowFocusLost(SDL_Window * window);
 extern void SDL_UpdateWindowGrab(SDL_Window * window);
 extern SDL_Window * SDL_GetFocusWindow(void);
 
-extern SDL_bool SDL_ShouldAllowTopmost(void);
-
 extern float SDL_ComputeDiagonalDPI(int hpix, int vpix, float hinches, float vinches);
 
 extern void SDL_OnApplicationWillTerminate(void);
@@ -417,8 +369,6 @@ extern void SDL_OnApplicationWillResignActive(void);
 extern void SDL_OnApplicationDidEnterBackground(void);
 extern void SDL_OnApplicationWillEnterForeground(void);
 extern void SDL_OnApplicationDidBecomeActive(void);
-
-extern void SDL_ToggleDragAndDropSupport(void);
 
 #endif /* SDL_sysvideo_h_ */
 
