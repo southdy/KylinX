@@ -18,11 +18,7 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-#ifdef TEST_MAIN
-#include "SDL_config.h"
-#else
 #include "../SDL_internal.h"
-#endif
 
 /* CPU feature detection for SDL */
 
@@ -61,23 +57,5 @@ SDL_SIMDFree(void *ptr)
         SDL_free(*(((void **) ptr) - 1));
     }
 }
-
-
-#ifdef TEST_MAIN
-
-#include <stdio.h>
-
-int
-main()
-{
-    printf("CPU count: %d\n", SDL_GetCPUCount());
-    printf("CPU type: %s\n", SDL_GetCPUType());
-    printf("CPU name: %s\n", SDL_GetCPUName());
-    printf("CacheLine size: %d\n", SDL_GetCPUCacheLineSize());
-    printf("RAM: %d MB\n", SDL_GetSystemRAM());
-    return 0;
-}
-
-#endif /* TEST_MAIN */
 
 /* vi: set ts=4 sw=4 expandtab: */
