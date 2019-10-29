@@ -30,22 +30,15 @@
 int
 UIKit_SetClipboardText(_THIS, const char *text)
 {
-#if TARGET_OS_TV
-    return SDL_SetError("The clipboard is not available on tvOS");
-#else
     @autoreleasepool {
         [UIPasteboard generalPasteboard].string = @(text);
         return 0;
     }
-#endif
 }
 
 char *
 UIKit_GetClipboardText(_THIS)
 {
-#if TARGET_OS_TV
-    return SDL_strdup(""); // Unsupported.
-#else
     @autoreleasepool {
         UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
         NSString *string = pasteboard.string;
@@ -56,18 +49,15 @@ UIKit_GetClipboardText(_THIS)
             return SDL_strdup("");
         }
     }
-#endif
 }
 
 SDL_bool
 UIKit_HasClipboardText(_THIS)
 {
     @autoreleasepool {
-#if !TARGET_OS_TV
         if ([UIPasteboard generalPasteboard].string != nil) {
             return SDL_TRUE;
         }
-#endif
         return SDL_FALSE;
     }
 }
@@ -75,7 +65,6 @@ UIKit_HasClipboardText(_THIS)
 void
 UIKit_InitClipboard(_THIS)
 {
-#if !TARGET_OS_TV
     @autoreleasepool {
         SDL_VideoData *data = (__bridge SDL_VideoData *) _this->driverdata;
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
@@ -89,7 +78,6 @@ UIKit_InitClipboard(_THIS)
 
         data.pasteboardObserver = observer;
     }
-#endif
 }
 
 void

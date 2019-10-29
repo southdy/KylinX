@@ -112,7 +112,6 @@ SetupWindowData(_THIS, SDL_Window *window, UIWindow *uiwindow, SDL_bool created)
         window->flags |= SDL_WINDOW_BORDERLESS;  /* never has a status bar. */
     }
 
-#if !TARGET_OS_TV
     if (displaydata.uiscreen == [UIScreen mainScreen]) {
         /* SDL_CreateWindow sets the window w&h to the display's bounds if the
          * fullscreen flag is set. But the display bounds orientation might not
@@ -133,7 +132,6 @@ SetupWindowData(_THIS, SDL_Window *window, UIWindow *uiwindow, SDL_bool created)
             height = temp;
         }
     }
-#endif /* !TARGET_OS_TV */
 
     window->x = 0;
     window->y = 0;
@@ -173,7 +171,6 @@ UIKit_CreateWindow(_THIS, SDL_Window *window)
         /* If monitor has a resolution of 0x0 (hasn't been explicitly set by the
          * user, so it's in standby), try to force the display to a resolution
          * that most closely matches the desired window size. */
-#if !TARGET_OS_TV
         const CGSize origsize = data.uiscreen.currentMode.size;
         if ((origsize.width == 0.0f) && (origsize.height == 0.0f)) {
             if (display->num_display_modes == 0) {
@@ -207,7 +204,6 @@ UIKit_CreateWindow(_THIS, SDL_Window *window)
                 [UIApplication sharedApplication].statusBarHidden = NO;
             }
         }
-#endif /* !TARGET_OS_TV */
 
         /* ignore the size user requested, and make a fullscreen window */
         /* !!! FIXME: can we have a smaller view? */
@@ -276,7 +272,6 @@ UIKit_UpdateWindowBorder(_THIS, SDL_Window * window)
     SDL_WindowData *data = (__bridge SDL_WindowData *) window->driverdata;
     SDL_uikitviewcontroller *viewcontroller = data.viewcontroller;
 
-#if !TARGET_OS_TV
     if (data.uiwindow.screen == [UIScreen mainScreen]) {
         if (window->flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS)) {
             [UIApplication sharedApplication].statusBarHidden = YES;
@@ -292,7 +287,6 @@ UIKit_UpdateWindowBorder(_THIS, SDL_Window * window)
 
     /* Update the view's frame to account for the status bar change. */
     viewcontroller.view.frame = UIKit_ComputeViewFrame(window, data.uiwindow.screen);
-#endif /* !TARGET_OS_TV */
 
     /* Make sure the view is offset correctly when the keyboard is visible. */
     [viewcontroller updateKeyboard];
@@ -381,7 +375,6 @@ UIKit_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
     }
 }
 
-#if !TARGET_OS_TV
 NSUInteger
 UIKit_GetSupportedOrientations(SDL_Window * window)
 {
@@ -447,7 +440,6 @@ UIKit_GetSupportedOrientations(SDL_Window * window)
 
     return orientationMask;
 }
-#endif /* !TARGET_OS_TV */
 
 int
 SDL_iPhoneSetAnimationCallback(SDL_Window * window, int interval, void (*callback)(void*), void *callbackParam)

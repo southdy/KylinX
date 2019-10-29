@@ -46,14 +46,12 @@
 - (void)loadView;
 - (void)viewDidLayoutSubviews;
 
-#if !TARGET_OS_TV
 - (NSUInteger)supportedInterfaceOrientations;
 - (BOOL)prefersStatusBarHidden;
 - (BOOL)prefersHomeIndicatorAutoHidden;
 - (UIRectEdge)preferredScreenEdgesDeferringSystemGestures;
 
 @property (nonatomic, assign) int homeIndicatorHidden;
-#endif
 
 - (void)showKeyboard;
 - (void)hideKeyboard;

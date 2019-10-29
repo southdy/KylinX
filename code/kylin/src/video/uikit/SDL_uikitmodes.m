@@ -170,11 +170,9 @@ UIKit_AddDisplay(UIScreen *uiscreen)
 SDL_bool
 UIKit_IsDisplayLandscape(UIScreen *uiscreen)
 {
-#if !TARGET_OS_TV
     if (uiscreen == [UIScreen mainScreen]) {
         return UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation);
     } else
-#endif /* !TARGET_OS_TV */
     {
         CGSize size = uiscreen.bounds.size;
         return (size.width > size.height);
@@ -190,9 +188,7 @@ UIKit_InitModes(_THIS)
                 return -1;
             }
         }
-#if !TARGET_OS_TV
         SDL_OnApplicationDidChangeStatusBarOrientation();
-#endif
     }
 
     return 0;
@@ -209,12 +205,7 @@ UIKit_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
         CGFloat scale = data.uiscreen.scale;
         NSArray *availableModes = nil;
 
-#if TARGET_OS_TV
-        addRotation = SDL_FALSE;
-        availableModes = @[data.uiscreen.currentMode];
-#else
         availableModes = data.uiscreen.availableModes;
-#endif
 
         for (UIScreenMode *uimode in availableModes) {
             /* The size of a UIScreenMode is in pixels, but we deal exclusively
@@ -249,10 +240,8 @@ UIKit_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode)
     @autoreleasepool {
         SDL_DisplayData *data = (__bridge SDL_DisplayData *) display->driverdata;
 
-#if !TARGET_OS_TV
         SDL_DisplayModeData *modedata = (__bridge SDL_DisplayModeData *)mode->driverdata;
         [data.uiscreen setCurrentMode:modedata.uiscreenmode];
-#endif
 
         if (data.uiscreen == [UIScreen mainScreen]) {
             /* [UIApplication setStatusBarOrientation:] no longer works reliably
@@ -287,7 +276,7 @@ UIKit_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
             return -1;
         }
 
-#if !TARGET_OS_TV && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
         if (!UIKit_IsSystemVersionAtLeast(7.0)) {
             frame = [data.uiscreen applicationFrame];
         }
@@ -325,7 +314,6 @@ UIKit_QuitModes(_THIS)
     }
 }
 
-#if !TARGET_OS_TV
 void SDL_OnApplicationDidChangeStatusBarOrientation()
 {
     BOOL isLandscape = UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation);
@@ -374,7 +362,6 @@ void SDL_OnApplicationDidChangeStatusBarOrientation()
         SDL_SendDisplayEvent(display, SDL_DISPLAYEVENT_ORIENTATION, orientation);
     }
 }
-#endif /* !TARGET_OS_TV */
 
 #endif /* SDL_VIDEO_DRIVER_UIKIT */
 

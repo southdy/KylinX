@@ -37,18 +37,6 @@
 
 #include "keyinfotable.h"
 
-#if TARGET_OS_TV
-static void SDLCALL
-SDL_AppleTVControllerUIHintChanged(void *userdata, const char *name, const char *oldValue, const char *hint)
-{
-    @autoreleasepool {
-        SDL_uikitviewcontroller *viewcontroller = (__bridge SDL_uikitviewcontroller *) userdata;
-        viewcontroller.controllerUserInteractionEnabled = hint && (*hint != '0');
-    }
-}
-#endif
-
-#if !TARGET_OS_TV
 static void SDLCALL
 SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *oldValue, const char *hint)
 {
@@ -64,7 +52,6 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
 #pragma clang diagnostic pop
     }
 }
-#endif
 
 @implementation SDL_uikitviewcontroller {
     CADisplayLink *displayLink;
@@ -92,17 +79,9 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
         showingKeyboard = NO;
         rotatingOrientation = NO;
 
-#if TARGET_OS_TV
-        SDL_AddHintCallback(SDL_HINT_APPLE_TV_CONTROLLER_UI_EVENTS,
-                            SDL_AppleTVControllerUIHintChanged,
-                            (__bridge void *) self);
-#endif
-
-#if !TARGET_OS_TV
         SDL_AddHintCallback(SDL_HINT_IOS_HIDE_HOME_INDICATOR,
                             SDL_HideHomeIndicatorHintChanged,
                             (__bridge void *) self);
-#endif
     }
     return self;
 }
@@ -111,17 +90,9 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
 {
     [self deinitKeyboard];
 
-#if TARGET_OS_TV
-    SDL_DelHintCallback(SDL_HINT_APPLE_TV_CONTROLLER_UI_EVENTS,
-                        SDL_AppleTVControllerUIHintChanged,
-                        (__bridge void *) self);
-#endif
-
-#if !TARGET_OS_TV
     SDL_DelHintCallback(SDL_HINT_IOS_HIDE_HOME_INDICATOR,
                         SDL_HideHomeIndicatorHintChanged,
                         (__bridge void *) self);
-#endif
 }
 
 - (void)setAnimationCallback:(int)interval
@@ -192,7 +163,6 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
     SDL_SendWindowEvent(window, SDL_WINDOWEVENT_RESIZED, w, h);
 }
 
-#if !TARGET_OS_TV
 - (NSUInteger)supportedInterfaceOrientations
 {
     return UIKit_GetSupportedOrientations(window);
@@ -237,7 +207,6 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
         return UIRectEdgeNone;
     }
 }
-#endif
 
 /*
  ---- Keyboard related functionality below this line ----
@@ -270,10 +239,8 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
     keyboardVisible = NO;
 
     NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-#if !TARGET_OS_TV
     [center addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
     [center addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
-#endif
     [center addObserver:self selector:@selector(textFieldTextDidChange:) name:UITextFieldTextDidChangeNotification object:nil];
 }
 
@@ -323,7 +290,7 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
 }
 
 /* willRotateToInterfaceOrientation and didRotateFromInterfaceOrientation are deprecated in iOS 8+ in favor of viewWillTransitionToSize */
-#if TARGET_OS_TV || __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
@@ -343,15 +310,13 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
     [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
     rotatingOrientation = NO;
 }
-#endif /* TARGET_OS_TV || __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000 */
+#endif /* __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000 */
 
 - (void)deinitKeyboard
 {
     NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-#if !TARGET_OS_TV
     [center removeObserver:self name:UIKeyboardWillShowNotification object:nil];
     [center removeObserver:self name:UIKeyboardWillHideNotification object:nil];
-#endif
     [center removeObserver:self name:UITextFieldTextDidChangeNotification object:nil];
 }
 
@@ -375,7 +340,6 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
-#if !TARGET_OS_TV
     CGRect kbrect = [[notification userInfo][UIKeyboardFrameEndUserInfoKey] CGRectValue];
 
     /* The keyboard rect is in the coordinate space of the screen/window, but we
@@ -383,7 +347,6 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
     kbrect = [self.view convertRect:kbrect fromView:nil];
 
     [self setKeyboardHeight:(int)kbrect.size.height];
-#endif
 }
 
 - (void)keyboardWillHide:(NSNotification *)notification

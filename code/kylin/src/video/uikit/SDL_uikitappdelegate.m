@@ -86,7 +86,6 @@ SDL_IdleTimerDisabledChanged(void *userdata, const char *name, const char *oldVa
     [UIApplication sharedApplication].idleTimerDisabled = disable;
 }
 
-#if !TARGET_OS_TV
 /* Load a launch image using the old UILaunchImageFile-era naming rules. */
 static UIImage *
 SDL_LoadLaunchImageNamed(NSString *name, int screenh)
@@ -125,13 +124,10 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
 
     return image;
 }
-#endif /* !TARGET_OS_TV */
 
 @interface SDLLaunchScreenController ()
 
-#if !TARGET_OS_TV
 - (NSUInteger)supportedInterfaceOrientations;
-#endif
 
 @end
 
@@ -172,7 +168,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
         int screenw = (int)([UIScreen mainScreen].bounds.size.width + 0.5);
         int screenh = (int)([UIScreen mainScreen].bounds.size.height + 0.5);
 
-#if !TARGET_OS_TV
         UIInterfaceOrientation curorient = [UIApplication sharedApplication].statusBarOrientation;
 
         /* We always want portrait-oriented size, to match UILaunchImageSize. */
@@ -181,7 +176,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
             screenw = screenh;
             screenh = width;
         }
-#endif
 
         /* Xcode 5 introduced a dictionary of launch images in Info.plist. */
         if (launchimages) {
@@ -202,7 +196,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
                     }
                 }
 
-#if !TARGET_OS_TV
                 UIInterfaceOrientationMask orientmask = UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown;
                 NSString *orientstring = dict[@"UILaunchImageOrientation"];
 
@@ -222,7 +215,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
                 if ((orientmask & (1 << curorient)) == 0) {
                     continue;
                 }
-#endif
 
                 imagename = dict[@"UILaunchImageName"];
             }
@@ -231,7 +223,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
                 image = [UIImage imageNamed:imagename];
             }
         }
-#if !TARGET_OS_TV
         else {
             imagename = [bundle objectForInfoDictionaryKey:@"UILaunchImageFile"];
 
@@ -243,13 +234,11 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
                 image = SDL_LoadLaunchImageNamed(@"Default", screenh);
             }
         }
-#endif
 
         if (image) {
             UIImageView *view = [[UIImageView alloc] initWithFrame:[UIScreen mainScreen].bounds];
             UIImageOrientation imageorient = UIImageOrientationUp;
 
-#if !TARGET_OS_TV
             /* Bugs observed / workaround tested in iOS 8.3, 7.1, and 6.1. */
             if (UIInterfaceOrientationIsLandscape(curorient)) {
                 if (atleastiOS8 && image.size.width < image.size.height) {
@@ -273,7 +262,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
                     }
                 }
             }
-#endif
 
             /* Create the properly oriented image. */
             view.image = [[UIImage alloc] initWithCGImage:image.CGImage scale:image.scale orientation:imageorient];
@@ -290,7 +278,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
     /* Do nothing. */
 }
 
-#if !TARGET_OS_TV
 - (BOOL)shouldAutorotate
 {
     /* If YES, the launch image will be incorrectly rotated in some cases. */
@@ -304,7 +291,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
      * the ones set here (it will cause an exception in that case.) */
     return UIInterfaceOrientationMaskAll;
 }
-#endif /* !TARGET_OS_TV */
 
 @end
 
@@ -383,8 +369,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
     UIViewController *vc = nil;
     NSString *screenname = nil;
 
-    /* tvOS only uses a plain launch image. */
-#if !TARGET_OS_TV
     screenname = [bundle objectForInfoDictionaryKey:@"UILaunchStoryboardName"];
 
     if (screenname && UIKit_IsSystemVersionAtLeast(8.0)) {
@@ -399,7 +383,6 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
             /* Do nothing (there's more code to execute below). */
         }
     }
-#endif
 
     if (vc == nil) {
         vc = [[SDLLaunchScreenController alloc] initWithNibName:screenname bundle:bundle];
@@ -453,12 +436,10 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
     /* Do nothing. */
 }
 
-#if !TARGET_OS_TV
 - (void)application:(UIApplication *)application didChangeStatusBarOrientation:(UIInterfaceOrientation)oldStatusBarOrientation
 {
     SDL_OnApplicationDidChangeStatusBarOrientation();
 }
-#endif
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
@@ -501,7 +482,7 @@ SDL_LoadLaunchImageNamed(NSString *name, int screenh)
     SDL_SendDropComplete(NULL);
 }
 
-#if TARGET_OS_TV || (defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_9_0)
+#if (defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_9_0)
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
 {

@@ -183,7 +183,7 @@ UIKit_ComputeViewFrame(SDL_Window *window, UIScreen *screen)
         frame = data.uiwindow.bounds;
     }
 
-#if !TARGET_OS_TV && (__IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0)
     BOOL hasiOS7 = UIKit_IsSystemVersionAtLeast(7.0);
 
     /* The view should always show behind the status bar in iOS 7+. */
@@ -192,7 +192,6 @@ UIKit_ComputeViewFrame(SDL_Window *window, UIScreen *screen)
     }
 #endif
 
-#if !TARGET_OS_TV
     /* iOS 10 seems to have a bug where, in certain conditions, putting the
      * device to sleep with the a landscape-only app open, re-orienting the
      * device to portrait, and turning it back on will result in the screen
@@ -214,7 +213,6 @@ UIKit_ComputeViewFrame(SDL_Window *window, UIScreen *screen)
             frame.size.height = height;
         }
     }
-#endif
 
     return frame;
 }
@@ -222,7 +220,6 @@ UIKit_ComputeViewFrame(SDL_Window *window, UIScreen *screen)
 void
 UIKit_ForceUpdateHomeIndicator()
 {
-#if !TARGET_OS_TV
     /* Force the main SDL window to re-evaluate home indicator state */
     SDL_Window *focus = SDL_GetFocusWindow();
     if (focus) {
@@ -237,7 +234,6 @@ UIKit_ForceUpdateHomeIndicator()
 #pragma clang diagnostic pop
         }
     }
-#endif /* !TARGET_OS_TV */
 }
 
 /*
@@ -251,12 +247,10 @@ UIKit_ForceUpdateHomeIndicator()
  *  identical!
  */
 
-#if !defined(SDL_VIDEO_DRIVER_COCOA)
 void SDL_NSLog(const char *text)
 {
     NSLog(@"%s", text);
 }
-#endif /* SDL_VIDEO_DRIVER_COCOA */
 
 /*
  * iOS Tablet detection

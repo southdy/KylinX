@@ -42,35 +42,14 @@
 - (instancetype)initWithFrame:(CGRect)frame
 {
     if ((self = [super initWithFrame:frame])) {
-#if TARGET_OS_TV
-        /* Apple TV Remote touchpad swipe gestures. */
-        UISwipeGestureRecognizer *swipeUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
-        swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
-        [self addGestureRecognizer:swipeUp];
-
-        UISwipeGestureRecognizer *swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
-        swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
-        [self addGestureRecognizer:swipeDown];
-
-        UISwipeGestureRecognizer *swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
-        swipeLeft.direction = UISwipeGestureRecognizerDirectionLeft;
-        [self addGestureRecognizer:swipeLeft];
-
-        UISwipeGestureRecognizer *swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
-        swipeRight.direction = UISwipeGestureRecognizerDirectionRight;
-        [self addGestureRecognizer:swipeRight];
-#endif
-
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         self.autoresizesSubviews = YES;
 
         directTouchId = 1;
         indirectTouchId = 2;
 
-#if !TARGET_OS_TV
         self.multipleTouchEnabled = YES;
         SDL_AddTouch(directTouchId, SDL_TOUCH_DEVICE_DIRECT, "");
-#endif
     }
 
     return self;
@@ -298,7 +277,7 @@
     /* This is only called when the force of a press changes. */
     [super pressesChanged:presses withEvent:event];
 }
-#endif /* TARGET_OS_TV || defined(__IPHONE_9_1) */
+#endif /* defined(__IPHONE_9_1) */
 
 @end
 

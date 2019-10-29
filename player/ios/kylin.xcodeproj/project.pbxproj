@@ -64,7 +64,6 @@
 		F1E638D92366026B000427C8 /* SDL_shaders_gles2.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638102366026B000427C8 /* SDL_shaders_gles2.c */; };
 		F1E638DA2366026B000427C8 /* SDL_dataqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E638112366026B000427C8 /* SDL_dataqueue.c */; };
 		F1E638DC2366026B000427C8 /* SDL_sysfilesystem.m in Sources */ = {isa = PBXBuildFile; fileRef = F1E638162366026B000427C8 /* SDL_sysfilesystem.m */; };
-		F1E638DE2366026B000427C8 /* SDL_spinlock.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6381A2366026B000427C8 /* SDL_spinlock.c */; };
 		F1E638DF2366026B000427C8 /* SDL_atomic.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6381B2366026B000427C8 /* SDL_atomic.c */; };
 		F1E638E02366026B000427C8 /* SDL.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6381C2366026B000427C8 /* SDL.c */; };
 		F1E638E12366026B000427C8 /* SDL_error.c in Sources */ = {isa = PBXBuildFile; fileRef = F1E6381D2366026B000427C8 /* SDL_error.c */; };
@@ -195,7 +194,6 @@
 		F1E638102366026B000427C8 /* SDL_shaders_gles2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_shaders_gles2.c; sourceTree = "<group>"; };
 		F1E638112366026B000427C8 /* SDL_dataqueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_dataqueue.c; sourceTree = "<group>"; };
 		F1E638162366026B000427C8 /* SDL_sysfilesystem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDL_sysfilesystem.m; sourceTree = "<group>"; };
-		F1E6381A2366026B000427C8 /* SDL_spinlock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_spinlock.c; sourceTree = "<group>"; };
 		F1E6381B2366026B000427C8 /* SDL_atomic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_atomic.c; sourceTree = "<group>"; };
 		F1E6381C2366026B000427C8 /* SDL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL.c; sourceTree = "<group>"; };
 		F1E6381D2366026B000427C8 /* SDL_error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_error.c; sourceTree = "<group>"; };
@@ -595,7 +593,6 @@
 		F1E638192366026B000427C8 /* atomic */ = {
 			isa = PBXGroup;
 			children = (
-				F1E6381A2366026B000427C8 /* SDL_spinlock.c */,
 				F1E6381B2366026B000427C8 /* SDL_atomic.c */,
 			);
 			path = atomic;
@@ -883,7 +880,6 @@
 				F1E634B823660182000427C8 /* kylin.c in Sources */,
 				F1E638F12366026B000427C8 /* SDL_getenv.c in Sources */,
 				F1E638C82366026B000427C8 /* SDL_rwops.c in Sources */,
-				F1E638DE2366026B000427C8 /* SDL_spinlock.c in Sources */,
 				F1E639042366026C000427C8 /* SDL_systhread.c in Sources */,
 				F1E638FF2366026C000427C8 /* SDL_cpuinfo.c in Sources */,
 				F1E638A72366026B000427C8 /* SDL_uikitclipboard.m in Sources */,
