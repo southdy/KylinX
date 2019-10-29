@@ -30,20 +30,14 @@
 /* Can't include sysaudio "../../audio/android/SDL_androidaudio.h"
  * because of THIS redefinition */
 
-#if !SDL_AUDIO_DISABLED && SDL_AUDIO_DRIVER_ANDROID
+#if SDL_AUDIO_DRIVER_ANDROID
 extern void ANDROIDAUDIO_ResumeDevices(void);
 extern void ANDROIDAUDIO_PauseDevices(void);
-#else
-static void ANDROIDAUDIO_ResumeDevices(void) {}
-static void ANDROIDAUDIO_PauseDevices(void) {}
 #endif
 
-#if !SDL_AUDIO_DISABLED && SDL_AUDIO_DRIVER_OPENSLES
+#if SDL_AUDIO_DRIVER_OPENSLES
 extern void openslES_ResumeDevices(void);
 extern void openslES_PauseDevices(void);
-#else
-static void openslES_ResumeDevices(void) {}
-static void openslES_PauseDevices(void) {}
 #endif
 
 /* Number of 'type' events in the event queue */

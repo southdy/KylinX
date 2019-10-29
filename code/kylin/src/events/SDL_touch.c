@@ -31,16 +31,6 @@
 static int SDL_num_touch = 0;
 static SDL_Touch **SDL_touchDevices = NULL;
 
-/* for mapping touch events to mice */
-
-#define SYNTHESIZE_TOUCH_TO_MOUSE 1
-
-#if SYNTHESIZE_TOUCH_TO_MOUSE
-static SDL_bool finger_touching = SDL_FALSE;
-static SDL_FingerID track_fingerid;
-static SDL_TouchID  track_touchid;
-#endif
-
 /* Public functions */
 int
 SDL_TouchInit(void)

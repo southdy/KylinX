@@ -124,24 +124,10 @@ ShouldUseTextureFramebuffer()
         }
     }
 
-    /* Each platform has different performance characteristics */
-#if defined(__WIN32__)
-    /* GDI BitBlt() is way faster than Direct3D dynamic textures right now.
-     */
-    return SDL_FALSE;
-
-#elif defined(__MACOSX__)
-    /* Mac OS X uses OpenGL as the native fast path (for cocoa and X11) */
-    return SDL_TRUE;
-
-#elif defined(__LINUX__)
-    return SDL_TRUE;
-#else
     /* Play it safe, assume that if there is a framebuffer driver that it's
        optimized for the current platform.
     */
     return SDL_FALSE;
-#endif
 }
 
 static int
@@ -361,9 +347,7 @@ SDL_VideoInit(const char *driver_name)
         SDL_VideoQuit();
     }
 
-#if !SDL_TIMERS_DISABLED
     SDL_TicksInit();
-#endif
 
     /* Start the event loop */
     if (SDL_InitSubSystem(SDL_INIT_EVENTS) < 0 ||

@@ -20,10 +20,6 @@
 */
 #include "./SDL_internal.h"
 
-#if defined(__WIN32__)
-#include "core/windows/SDL_windows.h"
-#endif
-
 #include "SDL.h"
 #include "SDL_atomic.h"
 #include "SDL_messagebox.h"
@@ -32,18 +28,8 @@
 #include "SDL_assert_c.h"
 #include "video/SDL_sysvideo.h"
 
-#ifdef __WIN32__
-#ifndef WS_OVERLAPPEDWINDOW
-#define WS_OVERLAPPEDWINDOW 0
-#endif
-#else  /* fprintf, etc. */
 #include <stdio.h>
 #include <stdlib.h>
-#endif
-
-#if defined(__EMSCRIPTEN__)
-#include <emscripten.h>
-#endif
 
 
 static SDL_assert_state SDLCALL
@@ -55,17 +41,10 @@ SDL_PromptAssertion(const SDL_assert_data *data, void *userdata);
  */
 static SDL_assert_data *triggered_assertions = NULL;
 
-#ifndef SDL_THREADS_DISABLED
 static SDL_mutex *assertion_mutex = NULL;
-#endif
 
 static SDL_AssertionHandler assertion_handler = SDL_PromptAssertion;
 static void *assertion_userdata = NULL;
-
-#ifdef __GNUC__
-static void
-debug_print(const char *fmt, ...) __attribute__((format (printf, 1, 2)));
-#endif
 
 static void
 debug_print(const char *fmt, ...)
@@ -120,17 +99,9 @@ static void SDL_GenerateAssertionReport(void)
 /* This is not declared in any header, although it is shared between some
     parts of SDL, because we don't want anything calling it without an
     extremely good reason. */
-#if defined(__WATCOMC__)
-extern void SDL_ExitProcess(const int exitcode);
-#pragma aux SDL_ExitProcess aborts;
-#endif
 extern SDL_NORETURN void SDL_ExitProcess(const int exitcode);
 
 
-#if defined(__WATCOMC__)
-static void SDL_AbortAssertion (void);
-#pragma aux SDL_AbortAssertion aborts;
-#endif
 static SDL_NORETURN void SDL_AbortAssertion(void)
 {
     SDL_Quit();
@@ -141,11 +112,7 @@ static SDL_NORETURN void SDL_AbortAssertion(void)
 static SDL_assert_state SDLCALL
 SDL_PromptAssertion(const SDL_assert_data *data, void *userdata)
 {
-#ifdef __WIN32__
-    #define ENDLINE "\r\n"
-#else
     #define ENDLINE "\n"
-#endif
 
     const char *envr;
     SDL_assert_state state = SDL_ASSERTION_ABORT;
@@ -231,42 +198,6 @@ SDL_PromptAssertion(const SDL_assert_data *data, void *userdata)
 
     else
     {
-#if defined(__EMSCRIPTEN__)
-        /* This is nasty, but we can't block on a custom UI. */
-        for ( ; ; ) {
-            SDL_bool okay = SDL_TRUE;
-            char *buf = (char *) EM_ASM_INT({
-                var str =
-                    UTF8ToString($0) + '\n\n' +
-                    'Abort/Retry/Ignore/AlwaysIgnore? [ariA] :';
-                var reply = window.prompt(str, "i");
-                if (reply === null) {
-                    reply = "i";
-                }
-                return allocate(intArrayFromString(reply), 'i8', ALLOC_NORMAL);
-            }, message);
-
-            if (SDL_strcmp(buf, "a") == 0) {
-                state = SDL_ASSERTION_ABORT;
-            /* (currently) no break functionality on Emscripten
-            } else if (SDL_strcmp(buf, "b") == 0) {
-                state = SDL_ASSERTION_BREAK; */
-            } else if (SDL_strcmp(buf, "r") == 0) {
-                state = SDL_ASSERTION_RETRY;
-            } else if (SDL_strcmp(buf, "i") == 0) {
-                state = SDL_ASSERTION_IGNORE;
-            } else if (SDL_strcmp(buf, "A") == 0) {
-                state = SDL_ASSERTION_ALWAYS_IGNORE;
-            } else {
-                okay = SDL_FALSE;
-            }
-            free(buf);
-
-            if (okay) {
-                break;
-            }
-        }
-#elif defined(HAVE_STDIO_H)
         /* this is a little hacky. */
         for ( ; ; ) {
             char buf[32];
@@ -293,7 +224,6 @@ SDL_PromptAssertion(const SDL_assert_data *data, void *userdata)
                 break;
             }
         }
-#endif /* HAVE_STDIO_H */
     }
 
     /* Re-enter fullscreen mode */
@@ -314,7 +244,6 @@ SDL_ReportAssertion(SDL_assert_data *data, const char *func, const char *file,
     SDL_assert_state state = SDL_ASSERTION_IGNORE;
     static int assertion_running = 0;
 
-#ifndef SDL_THREADS_DISABLED
     static SDL_SpinLock spinlock = 0;
     SDL_AtomicLock(&spinlock);
     if (assertion_mutex == NULL) { /* never called SDL_Init()? */
@@ -329,7 +258,6 @@ SDL_ReportAssertion(SDL_assert_data *data, const char *func, const char *file,
     if (SDL_LockMutex(assertion_mutex) < 0) {
         return SDL_ASSERTION_IGNORE;   /* oh well, I guess. */
     }
-#endif
 
     /* doing this because Visual C is upset over assigning in the macro. */
     if (data->trigger_count == 0) {
@@ -374,9 +302,7 @@ SDL_ReportAssertion(SDL_assert_data *data, const char *func, const char *file,
 
     assertion_running--;
 
-#ifndef SDL_THREADS_DISABLED
     SDL_UnlockMutex(assertion_mutex);
-#endif
 
     return state;
 }
@@ -385,12 +311,10 @@ SDL_ReportAssertion(SDL_assert_data *data, const char *func, const char *file,
 void SDL_AssertionsQuit(void)
 {
     SDL_GenerateAssertionReport();
-#ifndef SDL_THREADS_DISABLED
     if (assertion_mutex != NULL) {
         SDL_DestroyMutex(assertion_mutex);
         assertion_mutex = NULL;
     }
-#endif
 }
 
 void SDL_SetAssertionHandler(SDL_AssertionHandler handler, void *userdata)

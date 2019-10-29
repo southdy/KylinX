@@ -20,17 +20,7 @@
 */
 #include "./SDL_internal.h"
 
-#if defined(__WIN32__)
-#include "core/windows/SDL_windows.h"
-#elif defined(__OS2__)
-#include <stdlib.h> /* For _exit() */
-#elif !defined(__WINRT__)
 #include <unistd.h> /* For _exit(), etc. */
-#endif
-
-#if defined(__EMSCRIPTEN__)
-#include <emscripten.h>
-#endif
 
 /* Initialization code for SDL */
 
@@ -42,9 +32,7 @@
 #include "sensor/SDL_sensor_c.h"
 
 /* Initialization/Cleanup routines */
-#if !SDL_TIMERS_DISABLED
-# include "timer/SDL_timer_c.h"
-#endif
+#include "timer/SDL_timer_c.h"
 
 
 /* This is not declared in any header, although it is shared between some
@@ -130,78 +118,56 @@ SDL_InitSubSystem(Uint32 flags)
         flags |= SDL_INIT_EVENTS;
     }
 
-#if !SDL_TIMERS_DISABLED
     SDL_TicksInit();
-#endif
 
     /* Initialize the event subsystem */
     if ((flags & SDL_INIT_EVENTS)) {
-#if !SDL_EVENTS_DISABLED
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_EVENTS)) {
             if (SDL_EventsInit() < 0) {
                 return (-1);
             }
         }
         SDL_PrivateSubsystemRefCountIncr(SDL_INIT_EVENTS);
-#else
-        return SDL_SetError("SDL not built with events support");
-#endif
     }
 
     /* Initialize the timer subsystem */
-    if ((flags & SDL_INIT_TIMER)){
-#if !SDL_TIMERS_DISABLED
+    if ((flags & SDL_INIT_TIMER)) {
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_TIMER)) {
             if (SDL_TimerInit() < 0) {
                 return (-1);
             }
         }
         SDL_PrivateSubsystemRefCountIncr(SDL_INIT_TIMER);
-#else
-        return SDL_SetError("SDL not built with timer support");
-#endif
     }
 
     /* Initialize the video subsystem */
-    if ((flags & SDL_INIT_VIDEO)){
-#if !SDL_VIDEO_DISABLED
+    if ((flags & SDL_INIT_VIDEO)) {
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_VIDEO)) {
             if (SDL_VideoInit(NULL) < 0) {
                 return (-1);
             }
         }
         SDL_PrivateSubsystemRefCountIncr(SDL_INIT_VIDEO);
-#else
-        return SDL_SetError("SDL not built with video support");
-#endif
     }
 
     /* Initialize the audio subsystem */
-    if ((flags & SDL_INIT_AUDIO)){
-#if !SDL_AUDIO_DISABLED
+    if ((flags & SDL_INIT_AUDIO)) {
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_AUDIO)) {
             if (SDL_AudioInit(NULL) < 0) {
                 return (-1);
             }
         }
         SDL_PrivateSubsystemRefCountIncr(SDL_INIT_AUDIO);
-#else
-        return SDL_SetError("SDL not built with audio support");
-#endif
     }
 
     /* Initialize the sensor subsystem */
-    if ((flags & SDL_INIT_SENSOR)){
-#if !SDL_SENSOR_DISABLED
+    if ((flags & SDL_INIT_SENSOR)) {
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_SENSOR)) {
             if (SDL_SensorInit() < 0) {
                 return (-1);
             }
         }
         SDL_PrivateSubsystemRefCountIncr(SDL_INIT_SENSOR);
-#else
-        return SDL_SetError("SDL not built with sensor support");
-#endif
     }
 
     return (0);
@@ -217,25 +183,20 @@ void
 SDL_QuitSubSystem(Uint32 flags)
 {
     /* Shut down requested initialized subsystems */
-#if !SDL_SENSOR_DISABLED
     if ((flags & SDL_INIT_SENSOR)) {
         if (SDL_PrivateShouldQuitSubsystem(SDL_INIT_SENSOR)) {
             SDL_SensorQuit();
         }
         SDL_PrivateSubsystemRefCountDecr(SDL_INIT_SENSOR);
     }
-#endif
 
-#if !SDL_AUDIO_DISABLED
     if ((flags & SDL_INIT_AUDIO)) {
         if (SDL_PrivateShouldQuitSubsystem(SDL_INIT_AUDIO)) {
             SDL_AudioQuit();
         }
         SDL_PrivateSubsystemRefCountDecr(SDL_INIT_AUDIO);
     }
-#endif
 
-#if !SDL_VIDEO_DISABLED
     if ((flags & SDL_INIT_VIDEO)) {
         /* video implies events */
         flags |= SDL_INIT_EVENTS;
@@ -245,25 +206,20 @@ SDL_QuitSubSystem(Uint32 flags)
         }
         SDL_PrivateSubsystemRefCountDecr(SDL_INIT_VIDEO);
     }
-#endif
 
-#if !SDL_TIMERS_DISABLED
     if ((flags & SDL_INIT_TIMER)) {
         if (SDL_PrivateShouldQuitSubsystem(SDL_INIT_TIMER)) {
             SDL_TimerQuit();
         }
         SDL_PrivateSubsystemRefCountDecr(SDL_INIT_TIMER);
     }
-#endif
 
-#if !SDL_EVENTS_DISABLED
     if ((flags & SDL_INIT_EVENTS)) {
         if (SDL_PrivateShouldQuitSubsystem(SDL_INIT_EVENTS)) {
             SDL_EventsQuit();
         }
         SDL_PrivateSubsystemRefCountDecr(SDL_INIT_EVENTS);
     }
-#endif
 }
 
 Uint32
@@ -305,9 +261,7 @@ SDL_Quit(void)
     /* Quit all subsystems */
     SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
 
-#if !SDL_TIMERS_DISABLED
     SDL_TicksQuit();
-#endif
 
     SDL_ClearHints();
     SDL_AssertionsQuit();
@@ -346,58 +300,10 @@ SDL_GetRevisionNumber(void)
 const char *
 SDL_GetPlatform()
 {
-#if __AIX__
-    return "AIX";
-#elif __ANDROID__
+#if __ANDROID__
     return "Android";
-#elif __BSDI__
-    return "BSDI";
-#elif __DREAMCAST__
-    return "Dreamcast";
-#elif __EMSCRIPTEN__
-    return "Emscripten";
-#elif __FREEBSD__
-    return "FreeBSD";
-#elif __HAIKU__
-    return "Haiku";
-#elif __HPUX__
-    return "HP-UX";
-#elif __IRIX__
-    return "Irix";
-#elif __LINUX__
-    return "Linux";
-#elif __MINT__
-    return "Atari MiNT";
-#elif __MACOS__
-    return "MacOS Classic";
-#elif __MACOSX__
-    return "Mac OS X";
-#elif __NACL__
-    return "NaCl";
-#elif __NETBSD__
-    return "NetBSD";
-#elif __OPENBSD__
-    return "OpenBSD";
-#elif __OS2__
-    return "OS/2";
-#elif __OSF__
-    return "OSF/1";
-#elif __QNXNTO__
-    return "QNX Neutrino";
-#elif __RISCOS__
-    return "RISC OS";
-#elif __SOLARIS__
-    return "Solaris";
-#elif __WIN32__
-    return "Windows";
-#elif __WINRT__
-    return "WinRT";
-#elif __TVOS__
-    return "tvOS";
 #elif __IPHONEOS__
     return "iOS";
-#elif __PSP__
-    return "PlayStation Portable";
 #else
     return "Unknown (see SDL_platform.h)";
 #endif

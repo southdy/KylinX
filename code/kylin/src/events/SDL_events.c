@@ -339,7 +339,6 @@ SDL_StartEventLoop(void)
      */
 
     /* Create the lock and set ourselves active */
-#if !SDL_THREADS_DISABLED
     if (!SDL_EventQ.lock) {
         SDL_EventQ.lock = SDL_CreateMutex();
         if (SDL_EventQ.lock == NULL) {
@@ -353,7 +352,6 @@ SDL_StartEventLoop(void)
             return -1;
         }
     }
-#endif /* !SDL_THREADS_DISABLED */
 
     /* Process most event types */
     SDL_EventState(SDL_TEXTINPUT, SDL_DISABLE);
@@ -595,12 +593,10 @@ SDL_PumpEvents(void)
         _this->PumpEvents(_this);
     }
 
-#if !SDL_SENSOR_DISABLED
     /* Check for sensor state change */
     if (!SDL_disabled_events[SDL_SENSORUPDATE >> 8]) {
         SDL_SensorUpdate();
     }
-#endif
 
     SDL_SendPendingSignalEvents();  /* in case we had a signal handler fire, etc. */
 }

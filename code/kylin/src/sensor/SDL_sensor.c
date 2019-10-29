@@ -28,9 +28,7 @@
 #include "SDL_syssensor.h"
 #include "SDL_assert.h"
 
-#if !SDL_EVENTS_DISABLED
 #include "../events/SDL_events_c.h"
-#endif
 
 static SDL_SensorDriver *SDL_sensor_drivers[] = {
 #ifdef SDL_SENSOR_ANDROID
@@ -38,9 +36,6 @@ static SDL_SensorDriver *SDL_sensor_drivers[] = {
 #endif
 #ifdef SDL_SENSOR_COREMOTION
     &SDL_COREMOTION_SensorDriver,
-#endif
-#if defined(SDL_SENSOR_DUMMY) || defined(SDL_SENSOR_DISABLED)
-    &SDL_DUMMY_SensorDriver
 #endif
 };
 static SDL_Sensor *SDL_sensors = NULL;
@@ -75,11 +70,9 @@ SDL_SensorInit(void)
         SDL_sensor_lock = SDL_CreateMutex();
     }
 
-#if !SDL_EVENTS_DISABLED
     if (SDL_InitSubSystem(SDL_INIT_EVENTS) < 0) {
         return -1;
     }
-#endif /* !SDL_EVENTS_DISABLED */
 
     status = -1;
     for (i = 0; i < SDL_arraysize(SDL_sensor_drivers); ++i) {
@@ -459,9 +452,7 @@ SDL_SensorQuit(void)
 
     SDL_UnlockSensors();
 
-#if !SDL_EVENTS_DISABLED
     SDL_QuitSubSystem(SDL_INIT_EVENTS);
-#endif
 
     if (SDL_sensor_lock) {
         SDL_DestroyMutex(SDL_sensor_lock);
@@ -485,7 +476,6 @@ SDL_PrivateSensorUpdate(SDL_Sensor *sensor, float *data, int num_values)
 
     /* Post the event, if desired */
     posted = 0;
-#if !SDL_EVENTS_DISABLED
     if (SDL_GetEventState(SDL_SENSORUPDATE) == SDL_ENABLE) {
         SDL_Event event;
         event.type = SDL_SENSORUPDATE;
@@ -495,7 +485,6 @@ SDL_PrivateSensorUpdate(SDL_Sensor *sensor, float *data, int num_values)
         SDL_memcpy(event.sensor.data, data, num_values*sizeof(*data));
         posted = SDL_PushEvent(&event) == 1;
     }
-#endif /* !SDL_EVENTS_DISABLED */
     return posted;
 }
 
