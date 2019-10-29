@@ -1151,9 +1151,6 @@ SDL_FinishWindowCreation(SDL_Window *window, Uint32 flags)
     if (flags & SDL_WINDOW_FULLSCREEN) {
         SDL_SetWindowFullscreen(window, flags);
     }
-    if (flags & SDL_WINDOW_INPUT_GRABBED) {
-        SDL_SetWindowGrab(window, SDL_TRUE);
-    }
     if (!(flags & SDL_WINDOW_HIDDEN)) {
         SDL_ShowWindow(window);
     }
@@ -1917,68 +1914,6 @@ SDL_UpdateWindowSurfaceRects(SDL_Window * window, const SDL_Rect * rects,
 }
 
 void
-SDL_UpdateWindowGrab(SDL_Window * window)
-{
-    SDL_Window *grabbed_window;
-    SDL_bool grabbed;
-    if ((window->flags & SDL_WINDOW_INPUT_GRABBED) &&
-        (window->flags & SDL_WINDOW_INPUT_FOCUS)) {
-        grabbed = SDL_TRUE;
-    } else {
-        grabbed = SDL_FALSE;
-    }
-
-    grabbed_window = _this->grabbed_window;
-    if (grabbed) {
-        if (grabbed_window && (grabbed_window != window)) {
-            /* stealing a grab from another window! */
-            grabbed_window->flags &= ~SDL_WINDOW_INPUT_GRABBED;
-            if (_this->SetWindowGrab) {
-                _this->SetWindowGrab(_this, grabbed_window, SDL_FALSE);
-            }
-        }
-        _this->grabbed_window = window;
-    } else if (grabbed_window == window) {
-        _this->grabbed_window = NULL;  /* ungrabbing. */
-    }
-
-    if (_this->SetWindowGrab) {
-        _this->SetWindowGrab(_this, window, grabbed);
-    }
-}
-
-void
-SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
-{
-    CHECK_WINDOW_MAGIC(window,);
-
-    if (!!grabbed == !!(window->flags & SDL_WINDOW_INPUT_GRABBED)) {
-        return;
-    }
-    if (grabbed) {
-        window->flags |= SDL_WINDOW_INPUT_GRABBED;
-    } else {
-        window->flags &= ~SDL_WINDOW_INPUT_GRABBED;
-    }
-    SDL_UpdateWindowGrab(window);
-}
-
-SDL_bool
-SDL_GetWindowGrab(SDL_Window * window)
-{
-    CHECK_WINDOW_MAGIC(window, SDL_FALSE);
-    SDL_assert(!_this->grabbed_window || ((_this->grabbed_window->flags & SDL_WINDOW_INPUT_GRABBED) != 0));
-    return window == _this->grabbed_window;
-}
-
-SDL_Window *
-SDL_GetGrabbedWindow(void)
-{
-    SDL_assert(!_this->grabbed_window || ((_this->grabbed_window->flags & SDL_WINDOW_INPUT_GRABBED) != 0));
-    return _this->grabbed_window;
-}
-
-void
 SDL_OnWindowShown(SDL_Window * window)
 {
     SDL_OnWindowRestored(window);
@@ -2022,7 +1957,6 @@ SDL_OnWindowRestored(SDL_Window * window)
 void
 SDL_OnWindowFocusGained(SDL_Window * window)
 {
-    SDL_UpdateWindowGrab(window);
 }
 
 static SDL_bool
@@ -2047,8 +1981,6 @@ ShouldMinimizeOnFocusLoss(SDL_Window * window)
 void
 SDL_OnWindowFocusLost(SDL_Window * window)
 {
-    SDL_UpdateWindowGrab(window);
-
     if (ShouldMinimizeOnFocusLoss(window)) {
         SDL_MinimizeWindow(window);
     }

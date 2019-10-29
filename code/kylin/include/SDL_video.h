@@ -67,7 +67,6 @@ typedef struct
  *  \sa SDL_DestroyWindow()
  *  \sa SDL_GetWindowData()
  *  \sa SDL_GetWindowFlags()
- *  \sa SDL_GetWindowGrab()
  *  \sa SDL_GetWindowPosition()
  *  \sa SDL_GetWindowSize()
  *  \sa SDL_GetWindowTitle()
@@ -76,7 +75,6 @@ typedef struct
  *  \sa SDL_RaiseWindow()
  *  \sa SDL_SetWindowData()
  *  \sa SDL_SetWindowFullscreen()
- *  \sa SDL_SetWindowGrab()
  *  \sa SDL_SetWindowPosition()
  *  \sa SDL_SetWindowSize()
  *  \sa SDL_SetWindowBordered()
@@ -787,38 +785,6 @@ extern DECLSPEC int SDLCALL SDL_UpdateWindowSurface(SDL_Window * window);
 extern DECLSPEC int SDLCALL SDL_UpdateWindowSurfaceRects(SDL_Window * window,
                                                          const SDL_Rect * rects,
                                                          int numrects);
-
-/**
- *  \brief Set a window's input grab mode.
- *
- *  \param window The window for which the input grab mode should be set.
- *  \param grabbed This is SDL_TRUE to grab input, and SDL_FALSE to release input.
- *
- *  If the caller enables a grab while another window is currently grabbed,
- *  the other window loses its grab in favor of the caller's window.
- *
- *  \sa SDL_GetWindowGrab()
- */
-extern DECLSPEC void SDLCALL SDL_SetWindowGrab(SDL_Window * window,
-                                               SDL_bool grabbed);
-
-/**
- *  \brief Get a window's input grab mode.
- *
- *  \return This returns SDL_TRUE if input is grabbed, and SDL_FALSE otherwise.
- *
- *  \sa SDL_SetWindowGrab()
- */
-extern DECLSPEC SDL_bool SDLCALL SDL_GetWindowGrab(SDL_Window * window);
-
-/**
- *  \brief Get the window that currently has an input grab enabled.
- *
- *  \return This returns the window if input is grabbed, and NULL otherwise.
- *
- *  \sa SDL_SetWindowGrab()
- */
-extern DECLSPEC SDL_Window * SDLCALL SDL_GetGrabbedWindow(void);
 
 /**
  *  \brief Destroy a window.
