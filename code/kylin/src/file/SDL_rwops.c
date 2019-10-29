@@ -19,26 +19,10 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* We won't get fseeko64 on QNX if _LARGEFILE64_SOURCE is defined, but the
-   configure script knows the C runtime has it and enables it. */
-#ifndef __QNXNTO__
-/* Need this so Linux systems define fseek64o, ftell64o and off64_t */
-#define _LARGEFILE64_SOURCE
-#endif
-
 #include "../SDL_internal.h"
 
-#if defined(__WIN32__)
-#include "../core/windows/SDL_windows.h"
-#endif
-
-#ifdef HAVE_STDIO_H
 #include <stdio.h>
-#endif
-
-#ifdef HAVE_LIMITS_H
 #include <limits.h>
-#endif
 
 /* This file provides a general interface for SDL to read and write
    data sources.  It can easily be extended to files, memory, etc.
@@ -56,290 +40,9 @@
 #include "SDL_system.h"
 #endif
 
-#if __NACL__
-#include "nacl_io/nacl_io.h"
-#endif
-
-#ifdef __WIN32__
-
-/* Functions to read/write Win32 API file pointers */
-
-#ifndef INVALID_SET_FILE_POINTER
-#define INVALID_SET_FILE_POINTER 0xFFFFFFFF
-#endif
-
-#define READAHEAD_BUFFER_SIZE   1024
-
-static int SDLCALL
-windows_file_open(SDL_RWops * context, const char *filename, const char *mode)
-{
-    UINT old_error_mode;
-    HANDLE h;
-    DWORD r_right, w_right;
-    DWORD must_exist, truncate;
-    int a_mode;
-
-    if (!context)
-        return -1;              /* failed (invalid call) */
-
-    context->hidden.windowsio.h = INVALID_HANDLE_VALUE;   /* mark this as unusable */
-    context->hidden.windowsio.buffer.data = NULL;
-    context->hidden.windowsio.buffer.size = 0;
-    context->hidden.windowsio.buffer.left = 0;
-
-    /* "r" = reading, file must exist */
-    /* "w" = writing, truncate existing, file may not exist */
-    /* "r+"= reading or writing, file must exist            */
-    /* "a" = writing, append file may not exist             */
-    /* "a+"= append + read, file may not exist              */
-    /* "w+" = read, write, truncate. file may not exist    */
-
-    must_exist = (SDL_strchr(mode, 'r') != NULL) ? OPEN_EXISTING : 0;
-    truncate = (SDL_strchr(mode, 'w') != NULL) ? CREATE_ALWAYS : 0;
-    r_right = (SDL_strchr(mode, '+') != NULL
-               || must_exist) ? GENERIC_READ : 0;
-    a_mode = (SDL_strchr(mode, 'a') != NULL) ? OPEN_ALWAYS : 0;
-    w_right = (a_mode || SDL_strchr(mode, '+')
-               || truncate) ? GENERIC_WRITE : 0;
-
-    if (!r_right && !w_right)   /* inconsistent mode */
-        return -1;              /* failed (invalid call) */
-
-    context->hidden.windowsio.buffer.data =
-        (char *) SDL_malloc(READAHEAD_BUFFER_SIZE);
-    if (!context->hidden.windowsio.buffer.data) {
-        return SDL_OutOfMemory();
-    }
-    /* Do not open a dialog box if failure */
-    old_error_mode =
-        SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
-
-    {
-        LPTSTR tstr = WIN_UTF8ToString(filename);
-        h = CreateFile(tstr, (w_right | r_right),
-                       (w_right) ? 0 : FILE_SHARE_READ, NULL,
-                       (must_exist | truncate | a_mode),
-                       FILE_ATTRIBUTE_NORMAL, NULL);
-        SDL_free(tstr);
-    }
-
-    /* restore old behavior */
-    SetErrorMode(old_error_mode);
-
-    if (h == INVALID_HANDLE_VALUE) {
-        SDL_free(context->hidden.windowsio.buffer.data);
-        context->hidden.windowsio.buffer.data = NULL;
-        SDL_SetError("Couldn't open %s", filename);
-        return -2;              /* failed (CreateFile) */
-    }
-    context->hidden.windowsio.h = h;
-    context->hidden.windowsio.append = a_mode ? SDL_TRUE : SDL_FALSE;
-
-    return 0;                   /* ok */
-}
-
-static Sint64 SDLCALL
-windows_file_size(SDL_RWops * context)
-{
-    LARGE_INTEGER size;
-
-    if (!context || context->hidden.windowsio.h == INVALID_HANDLE_VALUE) {
-        return SDL_SetError("windows_file_size: invalid context/file not opened");
-    }
-
-    if (!GetFileSizeEx(context->hidden.windowsio.h, &size)) {
-        return WIN_SetError("windows_file_size");
-    }
-
-    return size.QuadPart;
-}
-
-static Sint64 SDLCALL
-windows_file_seek(SDL_RWops * context, Sint64 offset, int whence)
-{
-    DWORD windowswhence;
-    LARGE_INTEGER windowsoffset;
-
-    if (!context || context->hidden.windowsio.h == INVALID_HANDLE_VALUE) {
-        return SDL_SetError("windows_file_seek: invalid context/file not opened");
-    }
-
-    /* FIXME: We may be able to satisfy the seek within buffered data */
-    if (whence == RW_SEEK_CUR && context->hidden.windowsio.buffer.left) {
-        offset -= (long)context->hidden.windowsio.buffer.left;
-    }
-    context->hidden.windowsio.buffer.left = 0;
-
-    switch (whence) {
-    case RW_SEEK_SET:
-        windowswhence = FILE_BEGIN;
-        break;
-    case RW_SEEK_CUR:
-        windowswhence = FILE_CURRENT;
-        break;
-    case RW_SEEK_END:
-        windowswhence = FILE_END;
-        break;
-    default:
-        return SDL_SetError("windows_file_seek: Unknown value for 'whence'");
-    }
-
-    windowsoffset.QuadPart = offset;
-    if (!SetFilePointerEx(context->hidden.windowsio.h, windowsoffset, &windowsoffset, windowswhence)) {
-        return WIN_SetError("windows_file_seek");
-    }
-    return windowsoffset.QuadPart;
-}
-
-static size_t SDLCALL
-windows_file_read(SDL_RWops * context, void *ptr, size_t size, size_t maxnum)
-{
-    size_t total_need;
-    size_t total_read = 0;
-    size_t read_ahead;
-    DWORD byte_read;
-
-    total_need = size * maxnum;
-
-    if (!context || context->hidden.windowsio.h == INVALID_HANDLE_VALUE
-        || !total_need)
-        return 0;
-
-    if (context->hidden.windowsio.buffer.left > 0) {
-        void *data = (char *) context->hidden.windowsio.buffer.data +
-            context->hidden.windowsio.buffer.size -
-            context->hidden.windowsio.buffer.left;
-        read_ahead =
-            SDL_min(total_need, context->hidden.windowsio.buffer.left);
-        SDL_memcpy(ptr, data, read_ahead);
-        context->hidden.windowsio.buffer.left -= read_ahead;
-
-        if (read_ahead == total_need) {
-            return maxnum;
-        }
-        ptr = (char *) ptr + read_ahead;
-        total_need -= read_ahead;
-        total_read += read_ahead;
-    }
-
-    if (total_need < READAHEAD_BUFFER_SIZE) {
-        if (!ReadFile
-            (context->hidden.windowsio.h, context->hidden.windowsio.buffer.data,
-             READAHEAD_BUFFER_SIZE, &byte_read, NULL)) {
-            SDL_Error(SDL_EFREAD);
-            return 0;
-        }
-        read_ahead = SDL_min(total_need, (int) byte_read);
-        SDL_memcpy(ptr, context->hidden.windowsio.buffer.data, read_ahead);
-        context->hidden.windowsio.buffer.size = byte_read;
-        context->hidden.windowsio.buffer.left = byte_read - read_ahead;
-        total_read += read_ahead;
-    } else {
-        if (!ReadFile
-            (context->hidden.windowsio.h, ptr, (DWORD)total_need, &byte_read, NULL)) {
-            SDL_Error(SDL_EFREAD);
-            return 0;
-        }
-        total_read += byte_read;
-    }
-    return (total_read / size);
-}
-
-static size_t SDLCALL
-windows_file_write(SDL_RWops * context, const void *ptr, size_t size,
-                 size_t num)
-{
-
-    size_t total_bytes;
-    DWORD byte_written;
-    size_t nwritten;
-
-    total_bytes = size * num;
-
-    if (!context || context->hidden.windowsio.h == INVALID_HANDLE_VALUE
-        || total_bytes <= 0 || !size)
-        return 0;
-
-    if (context->hidden.windowsio.buffer.left) {
-        SetFilePointer(context->hidden.windowsio.h,
-                       -(LONG)context->hidden.windowsio.buffer.left, NULL,
-                       FILE_CURRENT);
-        context->hidden.windowsio.buffer.left = 0;
-    }
-
-    /* if in append mode, we must go to the EOF before write */
-    if (context->hidden.windowsio.append) {
-        if (SetFilePointer(context->hidden.windowsio.h, 0L, NULL, FILE_END) ==
-            INVALID_SET_FILE_POINTER) {
-            SDL_Error(SDL_EFWRITE);
-            return 0;
-        }
-    }
-
-    if (!WriteFile
-        (context->hidden.windowsio.h, ptr, (DWORD)total_bytes, &byte_written, NULL)) {
-        SDL_Error(SDL_EFWRITE);
-        return 0;
-    }
-
-    nwritten = byte_written / size;
-    return nwritten;
-}
-
-static int SDLCALL
-windows_file_close(SDL_RWops * context)
-{
-
-    if (context) {
-        if (context->hidden.windowsio.h != INVALID_HANDLE_VALUE) {
-            CloseHandle(context->hidden.windowsio.h);
-            context->hidden.windowsio.h = INVALID_HANDLE_VALUE;   /* to be sure */
-        }
-        SDL_free(context->hidden.windowsio.buffer.data);
-        context->hidden.windowsio.buffer.data = NULL;
-        SDL_FreeRW(context);
-    }
-    return 0;
-}
-#endif /* __WIN32__ */
-
-#ifdef HAVE_STDIO_H
-
-#ifdef HAVE_FOPEN64
-#define fopen   fopen64
-#endif
-#ifdef HAVE_FSEEKO64
-#define fseek_off_t off64_t
-#define fseek   fseeko64
-#define ftell   ftello64
-#elif defined(HAVE_FSEEKO)
-#if defined(OFF_MIN) && defined(OFF_MAX)
-#define FSEEK_OFF_MIN OFF_MIN
-#define FSEEK_OFF_MAX OFF_MAX
-#elif defined(HAVE_LIMITS_H)
-/* POSIX doesn't specify the minimum and maximum macros for off_t so
- * we have to improvise and dance around implementation-defined
- * behavior. This may fail if the off_t type has padding bits or
- * is not a two's-complement representation. The compilers will detect
- * and eliminate the dead code if off_t has 64 bits.
- */
-#define FSEEK_OFF_MAX (((((off_t)1 << (sizeof(off_t) * CHAR_BIT - 2)) - 1) << 1) + 1)
-#define FSEEK_OFF_MIN (-(FSEEK_OFF_MAX) - 1)
-#endif
-#define fseek_off_t off_t
-#define fseek   fseeko
-#define ftell   ftello
-#elif defined(HAVE__FSEEKI64)
-#define fseek_off_t __int64
-#define fseek   _fseeki64
-#define ftell   _ftelli64
-#else
-#ifdef HAVE_LIMITS_H
 #define FSEEK_OFF_MIN LONG_MIN
 #define FSEEK_OFF_MAX LONG_MAX
-#endif
 #define fseek_off_t long
-#endif
 
 /* Functions to read/write stdio file pointers */
 
@@ -377,11 +80,9 @@ stdio_seek(SDL_RWops * context, Sint64 offset, int whence)
         return SDL_SetError("Unknown value for 'whence'");
     }
 
-#if defined(FSEEK_OFF_MIN) && defined(FSEEK_OFF_MAX)
     if (offset < (Sint64)(FSEEK_OFF_MIN) || offset > (Sint64)(FSEEK_OFF_MAX)) {
         return SDL_SetError("Seek offset out of range");
     }
-#endif
 
     if (fseek(context->hidden.stdio.fp, (fseek_off_t)offset, stdiowhence) == 0) {
         Sint64 pos = ftell(context->hidden.stdio.fp);
@@ -432,7 +133,6 @@ stdio_close(SDL_RWops * context)
     }
     return status;
 }
-#endif /* !HAVE_STDIO_H */
 
 /* Functions to read/write memory pointers */
 
@@ -532,12 +232,11 @@ SDL_RWFromFile(const char *file, const char *mode)
         return NULL;
     }
 #if defined(__ANDROID__)
-#ifdef HAVE_STDIO_H
     /* Try to open the file on the filesystem first */
     if (*file == '/') {
         FILE *fp = fopen(file, mode);
         if (fp) {
-            return SDL_RWFromFP(fp, 1);
+            return SDL_RWFromFP(fp, SDL_TRUE);
         }
     } else {
         /* Try opening it from internal storage if it's a relative path */
@@ -552,11 +251,10 @@ SDL_RWFromFile(const char *file, const char *mode)
             fp = fopen(path, mode);
             SDL_stack_free(path);
             if (fp) {
-                return SDL_RWFromFP(fp, 1);
+                return SDL_RWFromFP(fp, SDL_TRUE);
             }
         }
     }
-#endif /* HAVE_STDIO_H */
 
     /* Try to open the file from the asset system */
     rwops = SDL_AllocRW();
@@ -573,49 +271,28 @@ SDL_RWFromFile(const char *file, const char *mode)
     rwops->close = Android_JNI_FileClose;
     rwops->type = SDL_RWOPS_JNIFILE;
 
-#elif defined(__WIN32__)
-    rwops = SDL_AllocRW();
-    if (!rwops)
-        return NULL;            /* SDL_SetError already setup by SDL_AllocRW() */
-    if (windows_file_open(rwops, file, mode) < 0) {
-        SDL_FreeRW(rwops);
-        return NULL;
-    }
-    rwops->size = windows_file_size;
-    rwops->seek = windows_file_seek;
-    rwops->read = windows_file_read;
-    rwops->write = windows_file_write;
-    rwops->close = windows_file_close;
-    rwops->type = SDL_RWOPS_WINFILE;
-
-#elif HAVE_STDIO_H
+#else
     {
-        #ifdef __APPLE__
-        char path[PATH_MAX];
+        char *path;
         FILE *fp;
 
-        snprintf(path, PATH_MAX, "assets/%s", file);
-        fp = SDL_OpenFPFromBundleOrFallback(path, mode);
-        #elif __WINRT__
-        FILE *fp = NULL;
-        fopen_s(&fp, file, mode);
-        #else
-        FILE *fp = fopen(file, mode);
-        #endif
-        if (fp == NULL) {
-            SDL_SetError("Couldn't open %s", file);
-        } else {
-            rwops = SDL_RWFromFP(fp, SDL_TRUE);
+        path = SDL_stack_alloc(char, PATH_MAX);
+        if (path) {
+            SDL_snprintf(path, PATH_MAX, "assets/%s", file);
+            fp = SDL_OpenFPFromBundleOrFallback(path, mode);
+            SDL_stack_free(path);
+            if (fp == NULL) {
+                SDL_SetError("Couldn't open %s", file);
+            } else {
+                rwops = SDL_RWFromFP(fp, SDL_TRUE);
+            }
         }
     }
-#else
-    SDL_SetError("SDL not compiled with stdio support");
-#endif /* !HAVE_STDIO_H */
+#endif
 
     return rwops;
 }
 
-#ifdef HAVE_STDIO_H
 SDL_RWops *
 SDL_RWFromFP(FILE * fp, SDL_bool autoclose)
 {
@@ -634,14 +311,6 @@ SDL_RWFromFP(FILE * fp, SDL_bool autoclose)
     }
     return rwops;
 }
-#else
-SDL_RWops *
-SDL_RWFromFP(void * fp, SDL_bool autoclose)
-{
-    SDL_SetError("SDL not compiled with stdio support");
-    return NULL;
-}
-#endif /* HAVE_STDIO_H */
 
 SDL_RWops *
 SDL_RWFromMem(void *mem, int size)
