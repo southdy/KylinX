@@ -1,227 +1,125 @@
 /*
- *  happy.c
- *  written by Holmes Futrell
- *  use however you want
- */
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely.
+*/
+
+/* Simple test of the SDL semaphore code */
+
+#include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+
 #include "SDL.h"
 
-/*
-    Produces a random int x, min <= x <= max
-    following a uniform distribution
-*/
-int
-randomInt(int min, int max)
+#define NUM_THREADS 10
+
+static SDL_sem *sem;
+int alive = 1;
+
+int SDLCALL
+ThreadFunc(void *data)
 {
-    return min + rand() % (max - min + 1);
-}
-
-/*
-    Produces a random float x, min <= x <= max
-    following a uniform distribution
- */
-float
-randomFloat(float min, float max)
-{
-    return rand() / (float) RAND_MAX *(max - min) + min;
-}
-
-void
-fatalError(const char *string)
-{
-    printf("%s: %s\n", string, SDL_GetError());
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, string, SDL_GetError(), NULL);
-    exit(1);
-}
-
-static Uint64 prevTime = 0;
-
-double
-updateDeltaTime(void)
-{
-    Uint64 curTime;
-    double deltaTime;
-
-    if (prevTime == 0) {
-        prevTime = SDL_GetPerformanceCounter();
+    int threadnum = (int) (uintptr_t) data;
+    while (alive) {
+        SDL_SemWait(sem);
+        SDL_Log("Thread number %d has got the semaphore (value = %d)!\n",
+                threadnum, SDL_SemValue(sem));
+        SDL_Delay(200);
+        SDL_SemPost(sem);
+        SDL_Log("Thread number %d has released the semaphore (value = %d)!\n",
+                threadnum, SDL_SemValue(sem));
+        SDL_Delay(1);           /* For the scheduler */
     }
-
-    curTime = SDL_GetPerformanceCounter();
-    deltaTime = (double) (curTime - prevTime) / (double) SDL_GetPerformanceFrequency();
-    prevTime = curTime;
-
-    return deltaTime;
-}
-
-#define NUM_HAPPY_FACES 100     /* number of faces to draw */
-#define HAPPY_FACE_SIZE 32      /* width and height of happyface */
-
-static SDL_Texture *texture = 0;    /* reference to texture holding happyface */
-
-static struct
-{
-    float x, y;                 /* position of happyface */
-    float xvel, yvel;           /* velocity of happyface */
-} faces[NUM_HAPPY_FACES];
-
-/*
-    Sets initial positions and velocities of happyfaces
-    units of velocity are pixels per millesecond
-*/
-void
-initializeHappyFaces(SDL_Renderer *renderer)
-{
-    int i;
-    int w;
-    int h;
-    SDL_RenderGetLogicalSize(renderer, &w, &h);
-
-    for (i = 0; i < NUM_HAPPY_FACES; i++) {
-        faces[i].x = randomFloat(0.0f, w - HAPPY_FACE_SIZE);
-        faces[i].y = randomFloat(0.0f, h - HAPPY_FACE_SIZE);
-        faces[i].xvel = randomFloat(-60.0f, 60.0f);
-        faces[i].yvel = randomFloat(-60.0f, 60.0f);
-    }
-}
-
-void
-render(SDL_Renderer *renderer, double deltaTime)
-{
-    int i;
-    SDL_Rect srcRect;
-    SDL_Rect dstRect;
-    int w;
-    int h;
-
-    SDL_RenderGetLogicalSize(renderer, &w, &h);
-
-    /* setup boundaries for happyface bouncing */
-    int maxx = w - HAPPY_FACE_SIZE;
-    int maxy = h - HAPPY_FACE_SIZE;
-    int minx = 0;
-    int miny = 0;
-
-    /* setup rects for drawing */
-    srcRect.x = 0;
-    srcRect.y = 0;
-    srcRect.w = HAPPY_FACE_SIZE;
-    srcRect.h = HAPPY_FACE_SIZE;
-    dstRect.w = HAPPY_FACE_SIZE;
-    dstRect.h = HAPPY_FACE_SIZE;
-
-    /* fill background in with black */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    /*
-       loop through all the happy faces:
-       - update position
-       - update velocity (if boundary is hit)
-       - draw
-     */
-    for (i = 0; i < NUM_HAPPY_FACES; i++) {
-        faces[i].x += faces[i].xvel * deltaTime;
-        faces[i].y += faces[i].yvel * deltaTime;
-        if (faces[i].x > maxx) {
-            faces[i].x = maxx;
-            faces[i].xvel = -faces[i].xvel;
-        } else if (faces[i].y > maxy) {
-            faces[i].y = maxy;
-            faces[i].yvel = -faces[i].yvel;
-        }
-        if (faces[i].x < minx) {
-            faces[i].x = minx;
-            faces[i].xvel = -faces[i].xvel;
-        } else if (faces[i].y < miny) {
-            faces[i].y = miny;
-            faces[i].yvel = -faces[i].yvel;
-        }
-        dstRect.x = faces[i].x;
-        dstRect.y = faces[i].y;
-        SDL_RenderCopy(renderer, texture, &srcRect, &dstRect);
-    }
-    /* update screen */
-    SDL_RenderPresent(renderer);
-
-}
-
-/*
-    loads the happyface graphic into a texture
-*/
-void
-initializeTexture(SDL_Renderer *renderer)
-{
-    SDL_Surface *bmp_surface;
-    /* load the bmp */
-    bmp_surface = SDL_LoadBMP("icon.bmp");
-    if (bmp_surface == NULL) {
-        fatalError("could not load bmp");
-    }
-    /* set white to transparent on the happyface */
-    SDL_SetColorKey(bmp_surface, 1,
-                    SDL_MapRGB(bmp_surface->format, 255, 255, 255));
-
-    /* convert RGBA surface to texture */
-    texture = SDL_CreateTextureFromSurface(renderer, bmp_surface);
-    if (texture == 0) {
-        fatalError("could not create texture");
-    }
-    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-
-    /* free up allocated memory */
-    SDL_FreeSurface(bmp_surface);
-}
-
-int
-main(int argc, char *argv[])
-{
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    int done;
-    int width;
-    int height;
-
-    /* initialize SDL */
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fatalError("Could not initialize SDL");
-    }
-
-    /* The specified window size doesn't matter - except for its aspect ratio,
-     * which determines whether the window is in portrait or landscape on iOS
-     * (if SDL_WINDOW_RESIZABLE isn't specified). */
-    window = SDL_CreateWindow(NULL, 0, 0, 320, 480, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALLOW_HIGHDPI);
-
-    renderer = SDL_CreateRenderer(window, -1, 0);
-
-    SDL_GetWindowSize(window, &width, &height);
-    SDL_RenderSetLogicalSize(renderer, width, height);
-
-    initializeTexture(renderer);
-    initializeHappyFaces(renderer);
-
-
-    /* main loop */
-    done = 0;
-    while (!done) {
-        SDL_Event event;
-        double deltaTime = updateDeltaTime();
-
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                done = 1;
-            }
-        }
-
-        render(renderer, deltaTime);
-        SDL_Delay(1);
-    }
-
-    /* cleanup */
-    SDL_DestroyTexture(texture);
-    /* shutdown SDL */
-    SDL_Quit();
-
+    SDL_Log("Thread number %d exiting.\n", threadnum);
     return 0;
+}
 
+static void
+killed(int sig)
+{
+    alive = 0;
+}
+
+static void
+TestWaitTimeout(void)
+{
+    Uint32 start_ticks;
+    Uint32 end_ticks;
+    Uint32 duration;
+    int retval;
+
+    sem = SDL_CreateSemaphore(0);
+    SDL_Log("Waiting 2 seconds on semaphore\n");
+
+    start_ticks = SDL_GetTicks();
+    retval = SDL_SemWaitTimeout(sem, 2000);
+    end_ticks = SDL_GetTicks();
+
+    duration = end_ticks - start_ticks;
+
+    /* Accept a little offset in the effective wait */
+    if (duration > 1900 && duration < 2050)
+        SDL_Log("Wait done.\n");
+    else
+        SDL_Log("Wait took %d milliseconds\n", duration);
+
+    /* Check to make sure the return value indicates timed out */
+    if (retval != SDL_MUTEX_TIMEDOUT)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_SemWaitTimeout returned: %d; expected: %d\n", retval, SDL_MUTEX_TIMEDOUT);
+}
+
+int
+main(int argc, char **argv)
+{
+    SDL_Thread *threads[NUM_THREADS];
+    uintptr_t i;
+    int init_sem;
+
+    /* Enable standard application logging */
+    SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+
+    /* Load the SDL library */
+    if (SDL_Init(0) < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s\n", SDL_GetError());
+        return (1);
+    }
+    signal(SIGTERM, killed);
+    signal(SIGINT, killed);
+
+    init_sem = 50;
+    sem = SDL_CreateSemaphore(init_sem);
+
+    SDL_Log("Running %d threads, semaphore value = %d\n", NUM_THREADS,
+           init_sem);
+    /* Create all the threads */
+    for (i = 0; i < NUM_THREADS; ++i) {
+        char name[64];
+        SDL_snprintf(name, sizeof (name), "Thread%u", (unsigned int) i);
+        threads[i] = SDL_CreateThread(ThreadFunc, name, (void *) i);
+    }
+
+    /* Wait 10 seconds */
+    SDL_Delay(10 * 1000);
+
+    /* Wait for all threads to finish */
+    SDL_Log("Waiting for threads to finish\n");
+    alive = 0;
+    for (i = 0; i < NUM_THREADS; ++i) {
+        SDL_WaitThread(threads[i], NULL);
+    }
+    SDL_Log("Finished waiting for threads\n");
+
+    SDL_DestroySemaphore(sem);
+
+    TestWaitTimeout();
+
+    SDL_Quit();
+    return (0);
 }

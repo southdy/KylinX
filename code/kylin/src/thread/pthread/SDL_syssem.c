@@ -31,9 +31,148 @@
 
 /* Wrapper around POSIX 1003.1b semaphores */
 
-#if defined(__MACOSX__) || defined(__IPHONEOS__)
-/* Mac OS X doesn't support sem_getvalue() as of version 10.4 */
-#include "../generic/SDL_syssem.c"
+#if defined(__IPHONEOS__)
+
+struct SDL_semaphore
+{
+    Uint32 count;
+    Uint32 waiters_count;
+    SDL_mutex *count_lock;
+    SDL_cond *count_nonzero;
+};
+
+SDL_sem *
+SDL_CreateSemaphore(Uint32 initial_value)
+{
+    SDL_sem *sem;
+
+    sem = (SDL_sem *) SDL_malloc(sizeof(*sem));
+    if (!sem) {
+        SDL_OutOfMemory();
+        return NULL;
+    }
+    sem->count = initial_value;
+    sem->waiters_count = 0;
+
+    sem->count_lock = SDL_CreateMutex();
+    sem->count_nonzero = SDL_CreateCond();
+    if (!sem->count_lock || !sem->count_nonzero) {
+        SDL_DestroySemaphore(sem);
+        return NULL;
+    }
+
+    return sem;
+}
+
+/* WARNING:
+   You cannot call this function when another thread is using the semaphore.
+*/
+void
+SDL_DestroySemaphore(SDL_sem * sem)
+{
+    if (sem) {
+        sem->count = 0xFFFFFFFF;
+        while (sem->waiters_count > 0) {
+            SDL_CondSignal(sem->count_nonzero);
+            SDL_Delay(10);
+        }
+        SDL_DestroyCond(sem->count_nonzero);
+        if (sem->count_lock) {
+            SDL_LockMutex(sem->count_lock);
+            SDL_UnlockMutex(sem->count_lock);
+            SDL_DestroyMutex(sem->count_lock);
+        }
+        SDL_free(sem);
+    }
+}
+
+int
+SDL_SemTryWait(SDL_sem * sem)
+{
+    int retval;
+
+    if (!sem) {
+        return SDL_SetError("Passed a NULL semaphore");
+    }
+
+    retval = SDL_MUTEX_TIMEDOUT;
+    SDL_LockMutex(sem->count_lock);
+    if (sem->count > 0) {
+        --sem->count;
+        retval = 0;
+    }
+    SDL_UnlockMutex(sem->count_lock);
+
+    return retval;
+}
+
+int
+SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
+{
+    int retval;
+
+    if (!sem) {
+        return SDL_SetError("Passed a NULL semaphore");
+    }
+
+    /* A timeout of 0 is an easy case */
+    if (timeout == 0) {
+        return SDL_SemTryWait(sem);
+    }
+
+    SDL_LockMutex(sem->count_lock);
+    ++sem->waiters_count;
+    retval = 0;
+    while ((sem->count == 0) && (retval != SDL_MUTEX_TIMEDOUT)) {
+        retval = SDL_CondWaitTimeout(sem->count_nonzero,
+                                     sem->count_lock, timeout);
+    }
+    --sem->waiters_count;
+    if (retval == 0) {
+        --sem->count;
+    }
+    SDL_UnlockMutex(sem->count_lock);
+
+    return retval;
+}
+
+int
+SDL_SemWait(SDL_sem * sem)
+{
+    return SDL_SemWaitTimeout(sem, SDL_MUTEX_MAXWAIT);
+}
+
+Uint32
+SDL_SemValue(SDL_sem * sem)
+{
+    Uint32 value;
+
+    value = 0;
+    if (sem) {
+        SDL_LockMutex(sem->count_lock);
+        value = sem->count;
+        SDL_UnlockMutex(sem->count_lock);
+    }
+    return value;
+}
+
+int
+SDL_SemPost(SDL_sem * sem)
+{
+    if (!sem) {
+        return SDL_SetError("Passed a NULL semaphore");
+    }
+
+    SDL_LockMutex(sem->count_lock);
+    if (sem->waiters_count > 0) {
+        SDL_CondSignal(sem->count_nonzero);
+    }
+    ++sem->count;
+    SDL_UnlockMutex(sem->count_lock);
+
+    return 0;
+}
+
 #else
 
 struct SDL_semaphore
@@ -105,14 +244,7 @@ int
 SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
 {
     int retval;
-#ifdef HAVE_SEM_TIMEDWAIT
-#ifndef HAVE_CLOCK_GETTIME
-    struct timeval now;
-#endif
-    struct timespec ts_timeout;
-#else
     Uint32 end;
-#endif
 
     if (!sem) {
         return SDL_SetError("Passed a NULL semaphore");
@@ -126,44 +258,6 @@ SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
         return SDL_SemWait(sem);
     }
 
-#ifdef HAVE_SEM_TIMEDWAIT
-    /* Setup the timeout. sem_timedwait doesn't wait for
-    * a lapse of time, but until we reach a certain time.
-    * This time is now plus the timeout.
-    */
-#ifdef HAVE_CLOCK_GETTIME
-    clock_gettime(CLOCK_REALTIME, &ts_timeout);
-
-    /* Add our timeout to current time */
-    ts_timeout.tv_nsec += (timeout % 1000) * 1000000;
-    ts_timeout.tv_sec += timeout / 1000;
-#else
-    gettimeofday(&now, NULL);
-
-    /* Add our timeout to current time */
-    ts_timeout.tv_sec = now.tv_sec + (timeout / 1000);
-    ts_timeout.tv_nsec = (now.tv_usec + (timeout % 1000) * 1000) * 1000;
-#endif
-
-    /* Wrap the second if needed */
-    if (ts_timeout.tv_nsec > 1000000000) {
-        ts_timeout.tv_sec += 1;
-        ts_timeout.tv_nsec -= 1000000000;
-    }
-
-    /* Wait. */
-    do {
-        retval = sem_timedwait(&sem->sem, &ts_timeout);
-    } while (retval < 0 && errno == EINTR);
-
-    if (retval < 0) {
-        if (errno == ETIMEDOUT) {
-            retval = SDL_MUTEX_TIMEDOUT;
-        } else {
-            SDL_SetError("sem_timedwait returned an error: %s", strerror(errno));
-        }
-    }
-#else
     end = SDL_GetTicks() + timeout;
     while ((retval = SDL_SemTryWait(sem)) == SDL_MUTEX_TIMEDOUT) {
         if (SDL_TICKS_PASSED(SDL_GetTicks(), end)) {
@@ -171,7 +265,6 @@ SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
         }
         SDL_Delay(1);
     }
-#endif /* HAVE_SEM_TIMEDWAIT */
 
     return retval;
 }

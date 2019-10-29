@@ -24,18 +24,7 @@
 
 #include <pthread.h>
 
-#if HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
-
 #include <signal.h>
-
-#if defined(__IPHONEOS__)
-#include <dlfcn.h>
-#ifndef RTLD_DEFAULT
-#define RTLD_DEFAULT NULL
-#endif
-#endif
 
 #include "SDL_log.h"
 #include "SDL_platform.h"
@@ -64,23 +53,10 @@ RunThread(void *data)
     return NULL;
 }
 
-#if defined(__IPHONEOS__)
-static SDL_bool checked_setname = SDL_FALSE;
-static int (*ppthread_setname_np)(const char*) = NULL;
-#endif
 int
 SDL_SYS_CreateThread(SDL_Thread * thread, void *args)
 {
     pthread_attr_t type;
-
-    /* do this here before any threads exist, so there's no race condition. */
-    #if defined(__IPHONEOS__)
-    if (!checked_setname) {
-        void *fn = dlsym(RTLD_DEFAULT, "pthread_setname_np");
-        ppthread_setname_np = (int(*)(const char*)) fn;
-        checked_setname = SDL_TRUE;
-    }
-    #endif
 
     /* Set the thread attributes */
     if (pthread_attr_init(&type) != 0) {
@@ -107,34 +83,12 @@ SDL_SYS_SetupThread(const char *name)
     int i;
     sigset_t mask;
 
-    if (name != NULL) {
-        #if defined(__IPHONEOS__)
-        SDL_assert(checked_setname);
-        if (ppthread_setname_np != NULL) {
-            ppthread_setname_np(name);
-        }
-        #elif HAVE_PTHREAD_SETNAME_NP
-            pthread_setname_np(pthread_self(), name);
-        #elif HAVE_PTHREAD_SET_NAME_NP
-            pthread_set_name_np(pthread_self(), name);
-        #endif
-    }
-
     /* Mask asynchronous signals for this thread */
     sigemptyset(&mask);
     for (i = 0; sig_list[i]; ++i) {
         sigaddset(&mask, sig_list[i]);
     }
     pthread_sigmask(SIG_BLOCK, &mask, 0);
-
-
-#ifdef PTHREAD_CANCEL_ASYNCHRONOUS
-    /* Allow ourselves to be asynchronously cancelled */
-    {
-        int oldstate;
-        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldstate);
-    }
-#endif
 }
 
 SDL_threadID
