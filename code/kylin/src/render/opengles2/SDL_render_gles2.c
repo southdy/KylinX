@@ -20,8 +20,6 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_RENDER_OGL_ES2 && !SDL_RENDER_DISABLED
-
 #include "SDL_assert.h"
 #include "SDL_hints.h"
 #include "SDL_opengles2.h"
@@ -250,26 +248,7 @@ GL_CheckAllErrors (const char *prefix, SDL_Renderer *renderer, const char *file,
 
 static int GLES2_LoadFunctions(GLES2_RenderData * data)
 {
-#if SDL_VIDEO_DRIVER_UIKIT
-#define __SDL_NOGETPROCADDR__
-#elif SDL_VIDEO_DRIVER_ANDROID
-#define __SDL_NOGETPROCADDR__
-#elif SDL_VIDEO_DRIVER_PANDORA
-#define __SDL_NOGETPROCADDR__
-#endif
-
-#if defined __SDL_NOGETPROCADDR__
 #define SDL_PROC(ret,func,params) data->func=func;
-#else
-#define SDL_PROC(ret,func,params) \
-    do { \
-        data->func = SDL_GL_GetProcAddress(#func); \
-        if ( ! data->func ) { \
-            return SDL_SetError("Couldn't load GLES2 function %s: %s", #func, SDL_GetError()); \
-        } \
-    } while ( 0 );
-#endif /* __SDL_NOGETPROCADDR__ */
-
 #include "SDL_gles2funcs.h"
 #undef SDL_PROC
     return 0;
@@ -1906,10 +1885,6 @@ static int GLES2_UnbindTexture (SDL_Renderer * renderer, SDL_Texture *texture)
  * Renderer instantiation                                                                        *
  *************************************************************************************************/
 
-#ifdef ZUNE_HD
-#define GL_NVIDIA_PLATFORM_BINARY_NV 0x890B
-#endif
-
 
 static SDL_Renderer *
 GLES2_CreateRenderer(SDL_Window *window, Uint32 flags)
@@ -1917,9 +1892,7 @@ GLES2_CreateRenderer(SDL_Window *window, Uint32 flags)
     SDL_Renderer *renderer;
     GLES2_RenderData *data;
     GLint nFormats;
-#ifndef ZUNE_HD
     GLboolean hasCompiler;
-#endif
     Uint32 window_flags = 0; /* -Wconditional-uninitialized */
     GLint window_framebuffer;
     GLint value;
@@ -1991,14 +1964,6 @@ GLES2_CreateRenderer(SDL_Window *window, Uint32 flags)
         goto error;
     }
 
-#if __WINRT__
-    /* DLudwig, 2013-11-29: ANGLE for WinRT doesn't seem to work unless VSync
-     * is turned on.  Not doing so will freeze the screen's contents to that
-     * of the first drawn frame.
-     */
-    flags |= SDL_RENDERER_PRESENTVSYNC;
-#endif
-
     if (flags & SDL_RENDERER_PRESENTVSYNC) {
         SDL_GL_SetSwapInterval(1);
     } else {
@@ -2022,16 +1987,11 @@ GLES2_CreateRenderer(SDL_Window *window, Uint32 flags)
     renderer->info.max_texture_height = value;
 
     /* Determine supported shader formats */
-    /* HACK: glGetInteger is broken on the Zune HD's compositor, so we just hardcode this */
-#ifdef ZUNE_HD
-    nFormats = 1;
-#else /* !ZUNE_HD */
     data->glGetIntegerv(GL_NUM_SHADER_BINARY_FORMATS, &nFormats);
     data->glGetBooleanv(GL_SHADER_COMPILER, &hasCompiler);
     if (hasCompiler) {
         ++nFormats;
     }
-#endif /* ZUNE_HD */
     data->shader_formats = (GLenum *)SDL_calloc(nFormats, sizeof(GLenum));
     if (!data->shader_formats) {
         GLES2_DestroyRenderer(renderer);
@@ -2039,14 +1999,10 @@ GLES2_CreateRenderer(SDL_Window *window, Uint32 flags)
         goto error;
     }
     data->shader_format_count = nFormats;
-#ifdef ZUNE_HD
-    data->shader_formats[0] = GL_NVIDIA_PLATFORM_BINARY_NV;
-#else /* !ZUNE_HD */
     data->glGetIntegerv(GL_SHADER_BINARY_FORMATS, (GLint *)data->shader_formats);
     if (hasCompiler) {
         data->shader_formats[nFormats - 1] = (GLenum)-1;
     }
-#endif /* ZUNE_HD */
 
     /* we keep a few of these and cycle through them, so data can live for a few frames. */
     data->glGenBuffers(SDL_arraysize(data->vertex_buffers), data->vertex_buffers);
@@ -2135,7 +2091,5 @@ SDL_RenderDriver GLES2_RenderDriver = {
         0
     }
 };
-
-#endif /* SDL_VIDEO_RENDER_OGL_ES2 && !SDL_RENDER_DISABLED */
 
 /* vi: set ts=4 sw=4 expandtab: */

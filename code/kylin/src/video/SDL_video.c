@@ -135,44 +135,7 @@ ShouldUseTextureFramebuffer()
     return SDL_TRUE;
 
 #elif defined(__LINUX__)
-    /* Properly configured OpenGL drivers are faster than MIT-SHM */
-#if SDL_VIDEO_OPENGL
-    /* Ugh, find a way to cache this value! */
-    {
-        SDL_Window *window;
-        SDL_GLContext context;
-        SDL_bool hasAcceleratedOpenGL = SDL_FALSE;
-
-        window = SDL_CreateWindow("OpenGL test", -32, -32, 32, 32, SDL_WINDOW_OPENGL|SDL_WINDOW_HIDDEN);
-        if (window) {
-            context = SDL_GL_CreateContext(window);
-            if (context) {
-                const GLubyte *(APIENTRY * glGetStringFunc) (GLenum);
-                const char *vendor = NULL;
-
-                glGetStringFunc = SDL_GL_GetProcAddress("glGetString");
-                if (glGetStringFunc) {
-                    vendor = (const char *) glGetStringFunc(GL_VENDOR);
-                }
-                /* Add more vendors here at will... */
-                if (vendor &&
-                    (SDL_strstr(vendor, "ATI Technologies") ||
-                     SDL_strstr(vendor, "NVIDIA"))) {
-                    hasAcceleratedOpenGL = SDL_TRUE;
-                }
-                SDL_GL_DeleteContext(context);
-            }
-            SDL_DestroyWindow(window);
-        }
-        return hasAcceleratedOpenGL;
-    }
-#elif SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
-    /* Let's be optimistic about this! */
     return SDL_TRUE;
-#else
-    return SDL_FALSE;
-#endif
-
 #else
     /* Play it safe, assume that if there is a framebuffer driver that it's
        optimized for the current platform.
@@ -2820,18 +2783,15 @@ SDL_GL_UnloadLibrary(void)
     }
 }
 
-#if SDL_VIDEO_OPENGL || SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
 static SDL_INLINE SDL_bool
 isAtLeastGL3(const char *verstr)
 {
     return (verstr && (SDL_atoi(verstr) >= 3));
 }
-#endif
 
 SDL_bool
 SDL_GL_ExtensionSupported(const char *extension)
 {
-#if SDL_VIDEO_OPENGL || SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
     const GLubyte *(APIENTRY * glGetStringFunc) (GLenum);
     const char *extensions;
     const char *start;
@@ -2907,9 +2867,6 @@ SDL_GL_ExtensionSupported(const char *extension)
         start = terminator;
     }
     return SDL_FALSE;
-#else
-    return SDL_FALSE;
-#endif
 }
 
 /* Deduce supported ES profile versions from the supported
@@ -2923,7 +2880,6 @@ SDL_GL_DeduceMaxSupportedESProfile(int* major, int* minor)
 {
 /* THIS REQUIRES AN EXISTING GL CONTEXT THAT HAS BEEN MADE CURRENT. */
 /*  Please refer to https://bugzilla.libsdl.org/show_bug.cgi?id=3725 for discussion. */
-#if SDL_VIDEO_OPENGL || SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
     /* XXX This is fragile; it will break in the event of release of
      * new versions of OpenGL ES.
      */
@@ -2940,7 +2896,6 @@ SDL_GL_DeduceMaxSupportedESProfile(int* major, int* minor)
         *major = 2;
         *minor = 0;
     }
-#endif
 }
 
 void
@@ -2973,19 +2928,9 @@ SDL_GL_ResetAttributes()
                                        &_this->gl_config.major_version,
                                        &_this->gl_config.minor_version);
     } else {
-#if SDL_VIDEO_OPENGL
-        _this->gl_config.major_version = 2;
-        _this->gl_config.minor_version = 1;
-        _this->gl_config.profile_mask = 0;
-#elif SDL_VIDEO_OPENGL_ES2
         _this->gl_config.major_version = 2;
         _this->gl_config.minor_version = 0;
         _this->gl_config.profile_mask = SDL_GL_CONTEXT_PROFILE_ES;
-#elif SDL_VIDEO_OPENGL_ES
-        _this->gl_config.major_version = 1;
-        _this->gl_config.minor_version = 1;
-        _this->gl_config.profile_mask = SDL_GL_CONTEXT_PROFILE_ES;
-#endif
     }
 
     _this->gl_config.flags = 0;
@@ -3000,7 +2945,6 @@ SDL_GL_ResetAttributes()
 int
 SDL_GL_SetAttribute(SDL_GLattr attr, int value)
 {
-#if SDL_VIDEO_OPENGL || SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
     int retval;
 
     if (!_this) {
@@ -3113,31 +3057,14 @@ SDL_GL_SetAttribute(SDL_GLattr attr, int value)
         break;
     }
     return retval;
-#else
-    return SDL_Unsupported();
-#endif /* SDL_VIDEO_OPENGL */
 }
 
 int
 SDL_GL_GetAttribute(SDL_GLattr attr, int *value)
 {
-#if SDL_VIDEO_OPENGL || SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
     GLenum (APIENTRY *glGetErrorFunc) (void);
     GLenum attrib = 0;
     GLenum error = 0;
-
-    /*
-     * Some queries in Core Profile desktop OpenGL 3+ contexts require
-     * glGetFramebufferAttachmentParameteriv instead of glGetIntegerv. Note that
-     * the enums we use for the former function don't exist in OpenGL ES 2, and
-     * the function itself doesn't exist prior to OpenGL 3 and OpenGL ES 2.
-     */
-#if SDL_VIDEO_OPENGL
-    const GLubyte *(APIENTRY *glGetStringFunc) (GLenum name);
-    void (APIENTRY *glGetFramebufferAttachmentParameterivFunc) (GLenum target, GLenum attachment, GLenum pname, GLint* params);
-    GLenum attachment = GL_BACK_LEFT;
-    GLenum attachmentattrib = 0;
-#endif
 
     if (!value) {
         return SDL_InvalidParamError("value");
@@ -3152,71 +3079,29 @@ SDL_GL_GetAttribute(SDL_GLattr attr, int *value)
 
     switch (attr) {
     case SDL_GL_RED_SIZE:
-#if SDL_VIDEO_OPENGL
-        attachmentattrib = GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE;
-#endif
         attrib = GL_RED_BITS;
         break;
     case SDL_GL_BLUE_SIZE:
-#if SDL_VIDEO_OPENGL
-        attachmentattrib = GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE;
-#endif
         attrib = GL_BLUE_BITS;
         break;
     case SDL_GL_GREEN_SIZE:
-#if SDL_VIDEO_OPENGL
-        attachmentattrib = GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE;
-#endif
         attrib = GL_GREEN_BITS;
         break;
     case SDL_GL_ALPHA_SIZE:
-#if SDL_VIDEO_OPENGL
-        attachmentattrib = GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE;
-#endif
         attrib = GL_ALPHA_BITS;
         break;
     case SDL_GL_DOUBLEBUFFER:
-#if SDL_VIDEO_OPENGL
-        attrib = GL_DOUBLEBUFFER;
-        break;
-#else
         /* OpenGL ES 1.0 and above specifications have EGL_SINGLE_BUFFER      */
         /* parameter which switches double buffer to single buffer. OpenGL ES */
         /* SDL driver must set proper value after initialization              */
         *value = _this->gl_config.double_buffer;
         return 0;
-#endif
     case SDL_GL_DEPTH_SIZE:
-#if SDL_VIDEO_OPENGL
-        attachment = GL_DEPTH;
-        attachmentattrib = GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE;
-#endif
         attrib = GL_DEPTH_BITS;
         break;
     case SDL_GL_STENCIL_SIZE:
-#if SDL_VIDEO_OPENGL
-        attachment = GL_STENCIL;
-        attachmentattrib = GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE;
-#endif
         attrib = GL_STENCIL_BITS;
         break;
-#if SDL_VIDEO_OPENGL
-    case SDL_GL_ACCUM_RED_SIZE:
-        attrib = GL_ACCUM_RED_BITS;
-        break;
-    case SDL_GL_ACCUM_GREEN_SIZE:
-        attrib = GL_ACCUM_GREEN_BITS;
-        break;
-    case SDL_GL_ACCUM_BLUE_SIZE:
-        attrib = GL_ACCUM_BLUE_BITS;
-        break;
-    case SDL_GL_ACCUM_ALPHA_SIZE:
-        attrib = GL_ACCUM_ALPHA_BITS;
-        break;
-    case SDL_GL_STEREO:
-        attrib = GL_STEREO;
-        break;
-#else
     case SDL_GL_ACCUM_RED_SIZE:
     case SDL_GL_ACCUM_GREEN_SIZE:
     case SDL_GL_ACCUM_BLUE_SIZE:
@@ -3225,7 +3110,6 @@ SDL_GL_GetAttribute(SDL_GLattr attr, int *value)
         /* none of these are supported in OpenGL ES */
         *value = 0;
         return 0;
-#endif
     case SDL_GL_MULTISAMPLEBUFFERS:
         attrib = GL_SAMPLE_BUFFERS;
         break;
@@ -3233,11 +3117,7 @@ SDL_GL_GetAttribute(SDL_GLattr attr, int *value)
         attrib = GL_SAMPLES;
         break;
     case SDL_GL_CONTEXT_RELEASE_BEHAVIOR:
-#if SDL_VIDEO_OPENGL
-        attrib = GL_CONTEXT_RELEASE_BEHAVIOR;
-#else
         attrib = GL_CONTEXT_RELEASE_BEHAVIOR_KHR;
-#endif
         break;
     case SDL_GL_BUFFER_SIZE:
         {
@@ -3321,22 +3201,6 @@ SDL_GL_GetAttribute(SDL_GLattr attr, int *value)
         return SDL_SetError("Unknown OpenGL attribute");
     }
 
-#if SDL_VIDEO_OPENGL
-    glGetStringFunc = SDL_GL_GetProcAddress("glGetString");
-    if (!glGetStringFunc) {
-        return -1;
-    }
-
-    if (attachmentattrib && isAtLeastGL3((const char *) glGetStringFunc(GL_VERSION))) {
-        glGetFramebufferAttachmentParameterivFunc = SDL_GL_GetProcAddress("glGetFramebufferAttachmentParameteriv");
-
-        if (glGetFramebufferAttachmentParameterivFunc) {
-            glGetFramebufferAttachmentParameterivFunc(GL_FRAMEBUFFER, attachment, attachmentattrib, (GLint *) value);
-        } else {
-            return -1;
-        }
-    } else
-#endif
     {
         void (APIENTRY *glGetIntegervFunc) (GLenum pname, GLint * params);
         glGetIntegervFunc = SDL_GL_GetProcAddress("glGetIntegerv");
@@ -3362,9 +3226,6 @@ SDL_GL_GetAttribute(SDL_GLattr attr, int *value)
         return SDL_SetError("OpenGL error: %08X", error);
     }
     return 0;
-#else
-    return SDL_Unsupported();
-#endif /* SDL_VIDEO_OPENGL */
 }
 
 SDL_GLContext

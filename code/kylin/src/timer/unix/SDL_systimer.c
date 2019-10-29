@@ -20,8 +20,6 @@
 */
 #include "../../SDL_internal.h"
 
-#ifdef SDL_TIMER_UNIX
-
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -42,9 +40,7 @@
    Also added OS X Monotonic clock support
    Based on work in https://github.com/ThomasHabets/monotonic_clock
  */
-#if HAVE_NANOSLEEP || HAVE_CLOCK_GETTIME
 #include <time.h>
-#endif
 #ifdef __APPLE__
 #include <mach/mach_time.h>
 #endif
@@ -188,44 +184,18 @@ SDL_Delay(Uint32 ms)
 {
     int was_error;
 
-#if HAVE_NANOSLEEP
     struct timespec elapsed, tv;
-#else
-    struct timeval tv;
-    Uint32 then, now, elapsed;
-#endif
 
     /* Set the timeout interval */
-#if HAVE_NANOSLEEP
     elapsed.tv_sec = ms / 1000;
     elapsed.tv_nsec = (ms % 1000) * 1000000;
-#else
-    then = SDL_GetTicks();
-#endif
     do {
         errno = 0;
 
-#if HAVE_NANOSLEEP
         tv.tv_sec = elapsed.tv_sec;
         tv.tv_nsec = elapsed.tv_nsec;
         was_error = nanosleep(&tv, &elapsed);
-#else
-        /* Calculate the time interval left (in case of interrupt) */
-        now = SDL_GetTicks();
-        elapsed = (now - then);
-        then = now;
-        if (elapsed >= ms) {
-            break;
-        }
-        ms -= elapsed;
-        tv.tv_sec = ms / 1000;
-        tv.tv_usec = (ms % 1000) * 1000;
-
-        was_error = select(0, NULL, NULL, NULL, &tv);
-#endif /* HAVE_NANOSLEEP */
     } while (was_error && (errno == EINTR));
 }
-
-#endif /* SDL_TIMER_UNIX */
 
 /* vi: set ts=4 sw=4 expandtab: */

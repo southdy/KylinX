@@ -23,8 +23,6 @@
 #ifndef SDL_shaders_gles2_h_
 #define SDL_shaders_gles2_h_
 
-#if SDL_VIDEO_RENDER_OGL_ES2
-
 typedef struct GLES2_ShaderInstance
 {
     GLenum type;
@@ -62,8 +60,6 @@ typedef enum
 #define GLES2_SOURCE_SHADER (GLenum)-1
 
 const GLES2_Shader *GLES2_GetShader(GLES2_ShaderType type);
-
-#endif /* SDL_VIDEO_RENDER_OGL_ES2 */
 
 #endif /* SDL_shaders_gles2_h_ */
 

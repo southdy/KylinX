@@ -123,81 +123,23 @@
 #define HAVE_TANF   1
 #define HAVE_SIGACTION  1
 #define HAVE_SETJMP 1
-#define HAVE_NANOSLEEP  1
 #define HAVE_SYSCONF    1
 #define HAVE_SYSCTLBYNAME 1
 
 /* enable iPhone version of Core Audio driver */
 #define SDL_AUDIO_DRIVER_COREAUDIO 1
-/* Enable the dummy audio driver (src/audio/dummy/\*.c) */
-#define SDL_AUDIO_DRIVER_DUMMY  1
 
-/* Enable the stub haptic driver (src/haptic/dummy/\*.c) */
-#define SDL_HAPTIC_DUMMY 1
-
-/* Enable MFi joystick support */
-#define SDL_JOYSTICK_MFI 1
-/*#define SDL_JOYSTICK_HIDAPI 1*/
-
-#ifdef __TVOS__
-#define SDL_SENSOR_DUMMY    1
-#else
 /* Enable the CoreMotion sensor driver */
 #define SDL_SENSOR_COREMOTION   1
-#endif
-
-/* Enable Unix style SO loading */
-#define SDL_LOADSO_DLOPEN 1
-
-/* Enable various threading systems */
-#define SDL_THREAD_PTHREAD  1
-#define SDL_THREAD_PTHREAD_RECURSIVE_MUTEX  1
-
-/* Enable various timer systems */
-#define SDL_TIMER_UNIX  1
 
 /* Supported video drivers */
 #define SDL_VIDEO_DRIVER_UIKIT  1
-#define SDL_VIDEO_DRIVER_DUMMY  1
-
-/* Enable OpenGL ES */
-#define SDL_VIDEO_OPENGL_ES2 1
-#define SDL_VIDEO_OPENGL_ES 1
-#define SDL_VIDEO_RENDER_OGL_ES 1
-#define SDL_VIDEO_RENDER_OGL_ES2    1
-
-/* Metal supported on 64-bit devices running iOS 8.0 and tvOS 9.0 and newer */
-#if !TARGET_OS_SIMULATOR && !TARGET_CPU_ARM && ((__IPHONE_OS_VERSION_MIN_REQUIRED >= 80000) || (__TV_OS_VERSION_MIN_REQUIRED >= 90000))
-#define SDL_PLATFORM_SUPPORTS_METAL	1
-#else
-#define SDL_PLATFORM_SUPPORTS_METAL	0
-#endif
-
-#if SDL_PLATFORM_SUPPORTS_METAL
-#define SDL_VIDEO_RENDER_METAL  1
-#endif
-
-#if SDL_PLATFORM_SUPPORTS_METAL
-#define SDL_VIDEO_VULKAN 1
-#endif
-
-#if SDL_PLATFORM_SUPPORTS_METAL
-#define SDL_VIDEO_METAL 1
-#endif
 
 /* Enable system power support */
 #define SDL_POWER_UIKIT 1
 
-/* enable iPhone keyboard support */
-#define SDL_IPHONE_KEYBOARD 1
-
 /* enable iOS extended launch screen */
 #define SDL_IPHONE_LAUNCHSCREEN 1
-
-/* Set max recognized G-force from accelerometer
-   See src/joystick/uikit/SDL_sysjoystick.m for notes on why this is needed
- */
-#define SDL_IPHONE_MAX_GFORCE 5.0
 
 /* enable filesystem support */
 #define SDL_FILESYSTEM_COCOA   1

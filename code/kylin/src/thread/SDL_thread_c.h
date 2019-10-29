@@ -26,20 +26,7 @@
 #include "SDL_thread.h"
 
 /* Need the definitions of SYS_ThreadHandle */
-#if SDL_THREADS_DISABLED
-#include "generic/SDL_systhread_c.h"
-#elif SDL_THREAD_PTHREAD
 #include "pthread/SDL_systhread_c.h"
-#elif SDL_THREAD_WINDOWS
-#include "windows/SDL_systhread_c.h"
-#elif SDL_THREAD_PSP
-#include "psp/SDL_systhread_c.h"
-#elif SDL_THREAD_STDCPP
-#include "stdcpp/SDL_systhread_c.h"
-#else
-#error Need thread implementation for this platform
-#include "generic/SDL_systhread_c.h"
-#endif
 #include "../SDL_error_c.h"
 
 typedef enum SDL_ThreadState

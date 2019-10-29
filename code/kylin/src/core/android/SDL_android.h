@@ -85,14 +85,6 @@ SDL_bool Android_JNI_HasClipboardText(void);
 /* Power support */
 int Android_JNI_GetPowerInfo(int* plugged, int* charged, int* battery, int* seconds, int* percent);
 
-/* Joystick support */
-void Android_JNI_PollInputDevices(void);
-
-/* Haptic support */
-void Android_JNI_PollHapticDevices(void);
-void Android_JNI_HapticRun(int device_id, float intensity, int length);
-void Android_JNI_HapticStop(int device_id);
-
 /* Video */
 void Android_JNI_SuspendScreenSaver(SDL_bool suspend);
 
@@ -113,16 +105,6 @@ JNIEXPORT void JNICALL SDL_Android_Init(JNIEnv* mEnv, jclass cls);
 /* MessageBox */
 #include "SDL_messagebox.h"
 int Android_JNI_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid);
-
-/* Cursor support */
-int Android_JNI_CreateCustomCursor(SDL_Surface *surface, int hot_x, int hot_y);
-SDL_bool Android_JNI_SetCustomCursor(int cursorID);
-SDL_bool Android_JNI_SetSystemCursor(int cursorID);
-
-/* Relative mouse support */
-SDL_bool Android_JNI_SupportsRelativeMouse(void);
-SDL_bool Android_JNI_SetRelativeMouseEnabled(SDL_bool enabled);
-
 
 int SDL_GetAndroidSDKVersion(void);
 

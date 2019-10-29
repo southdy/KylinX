@@ -100,13 +100,11 @@ UIKit_CreateDevice(int devindex)
         device->GetWindowWMInfo = UIKit_GetWindowWMInfo;
         device->GetDisplayUsableBounds = UIKit_GetDisplayUsableBounds;
 
-#if SDL_IPHONE_KEYBOARD
         device->HasScreenKeyboardSupport = UIKit_HasScreenKeyboardSupport;
         device->ShowScreenKeyboard = UIKit_ShowScreenKeyboard;
         device->HideScreenKeyboard = UIKit_HideScreenKeyboard;
         device->IsScreenKeyboardShown = UIKit_IsScreenKeyboardShown;
         device->SetTextInputRect = UIKit_SetTextInputRect;
-#endif
 
         device->SetClipboardText = UIKit_SetClipboardText;
         device->GetClipboardText = UIKit_GetClipboardText;

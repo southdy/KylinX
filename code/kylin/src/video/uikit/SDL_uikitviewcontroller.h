@@ -26,18 +26,9 @@
 
 #include "SDL_touch.h"
 
-#if TARGET_OS_TV
-#import <GameController/GameController.h>
-#define SDLRootViewController GCEventViewController
-#else
 #define SDLRootViewController UIViewController
-#endif
 
-#if SDL_IPHONE_KEYBOARD
 @interface SDL_uikitviewcontroller : SDLRootViewController <UITextFieldDelegate>
-#else
-@interface SDL_uikitviewcontroller : SDLRootViewController
-#endif
 
 @property (nonatomic, assign) SDL_Window *window;
 
@@ -64,7 +55,6 @@
 @property (nonatomic, assign) int homeIndicatorHidden;
 #endif
 
-#if SDL_IPHONE_KEYBOARD
 - (void)showKeyboard;
 - (void)hideKeyboard;
 - (void)initKeyboard;
@@ -78,14 +68,11 @@
 @property (nonatomic, assign, getter=isKeyboardVisible) BOOL keyboardVisible;
 @property (nonatomic, assign) SDL_Rect textInputRect;
 @property (nonatomic, assign) int keyboardHeight;
-#endif
 
 @end
 
-#if SDL_IPHONE_KEYBOARD
 SDL_bool UIKit_HasScreenKeyboardSupport(_THIS);
 void UIKit_ShowScreenKeyboard(_THIS, SDL_Window *window);
 void UIKit_HideScreenKeyboard(_THIS, SDL_Window *window);
 SDL_bool UIKit_IsScreenKeyboardShown(_THIS, SDL_Window *window);
 void UIKit_SetTextInputRect(_THIS, SDL_Rect *rect);
-#endif

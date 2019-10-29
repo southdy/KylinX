@@ -35,9 +35,7 @@
 #include "SDL_uikitwindow.h"
 #include "SDL_uikitopengles.h"
 
-#if SDL_IPHONE_KEYBOARD
 #include "keyinfotable.h"
-#endif
 
 #if TARGET_OS_TV
 static void SDLCALL
@@ -74,14 +72,12 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
     void (*animationCallback)(void*);
     void *animationCallbackParam;
 
-#if SDL_IPHONE_KEYBOARD
     UITextField *textField;
     BOOL hardwareKeyboard;
     BOOL showingKeyboard;
     BOOL rotatingOrientation;
     NSString *changeText;
     NSString *obligateForBackspace;
-#endif
 }
 
 @synthesize window;
@@ -91,12 +87,10 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
     if (self = [super initWithNibName:nil bundle:nil]) {
         self.window = _window;
 
-#if SDL_IPHONE_KEYBOARD
         [self initKeyboard];
         hardwareKeyboard = NO;
         showingKeyboard = NO;
         rotatingOrientation = NO;
-#endif
 
 #if TARGET_OS_TV
         SDL_AddHintCallback(SDL_HINT_APPLE_TV_CONTROLLER_UI_EVENTS,
@@ -115,9 +109,7 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
 
 - (void)dealloc
 {
-#if SDL_IPHONE_KEYBOARD
     [self deinitKeyboard];
-#endif
 
 #if TARGET_OS_TV
     SDL_DelHintCallback(SDL_HINT_APPLE_TV_CONTROLLER_UI_EVENTS,
@@ -250,7 +242,6 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
 /*
  ---- Keyboard related functionality below this line ----
  */
-#if SDL_IPHONE_KEYBOARD
 
 @synthesize textInputRect;
 @synthesize keyboardHeight;
@@ -513,12 +504,9 @@ SDL_HideHomeIndicatorHintChanged(void *userdata, const char *name, const char *o
     return YES;
 }
 
-#endif
-
 @end
 
 /* iPhone keyboard addition functions */
-#if SDL_IPHONE_KEYBOARD
 
 static SDL_uikitviewcontroller *
 GetWindowViewController(SDL_Window * window)
@@ -589,8 +577,6 @@ UIKit_SetTextInputRect(_THIS, SDL_Rect *rect)
     }
 }
 
-
-#endif /* SDL_IPHONE_KEYBOARD */
 
 #endif /* SDL_VIDEO_DRIVER_UIKIT */
 
