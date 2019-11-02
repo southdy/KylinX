@@ -26,10 +26,6 @@
 #include "SDL_error.h"
 #include "SDL_error_c.h"
 
-
-/* Routine to get the thread-specific error variable */
-extern SDL_error *SDL_GetErrBuf(void);
-
 #define SDL_ERRBUFIZE   1024
 
 /* Private functions */

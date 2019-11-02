@@ -99,7 +99,7 @@ static void SDL_GenerateAssertionReport(void)
 /* This is not declared in any header, although it is shared between some
     parts of SDL, because we don't want anything calling it without an
     extremely good reason. */
-extern SDL_NORETURN void SDL_ExitProcess(const int exitcode);
+extern SDL_NORETURN void SDL_ExitProcess(int exitcode);
 
 
 static SDL_NORETURN void SDL_AbortAssertion(void)

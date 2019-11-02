@@ -1099,7 +1099,7 @@ void Android_JNI_SetActivityTitle(const char *title)
 {
     JNIEnv *env = Android_JNI_GetEnv();
 
-    jstring jtitle = (jstring)((*env)->NewStringUTF(env, title));
+    jstring jtitle = (*env)->NewStringUTF(env, title);
     (*env)->CallStaticBooleanMethod(env, mActivityClass, midSetActivityTitle, jtitle);
     (*env)->DeleteLocalRef(env, jtitle);
 }
@@ -1114,7 +1114,7 @@ void Android_JNI_SetOrientation(int w, int h, int resizable, const char *hint)
 {
     JNIEnv *env = Android_JNI_GetEnv();
 
-    jstring jhint = (jstring)((*env)->NewStringUTF(env, (hint ? hint : "")));
+    jstring jhint = (*env)->NewStringUTF(env, (hint ? hint : ""));
     (*env)->CallStaticVoidMethod(env, mActivityClass, midSetOrientation, w, h, (resizable? 1 : 0), jhint);
     (*env)->DeleteLocalRef(env, jhint);
 }
@@ -1159,7 +1159,6 @@ static jobject captureBuffer = NULL;
 int Android_JNI_OpenAudioDevice(int iscapture, SDL_AudioSpec *spec)
 {
     int audioformat;
-    int numBufferFrames;
     jobject jbufobj = NULL;
     jobject result;
     int *resultElements;
@@ -1264,7 +1263,6 @@ int Android_JNI_OpenAudioDevice(int iscapture, SDL_AudioSpec *spec)
         audioBufferFormat = audioformat;
         audioBuffer = jbufobj;
     }
-    numBufferFrames = (*env)->GetArrayLength(env, (jarray)jbufobj);
 
     if (!iscapture) {
         isCopy = JNI_FALSE;
@@ -1366,7 +1364,7 @@ int Android_JNI_CaptureAudioBuffer(void *buffer, int buflen)
         if (br > 0) {
             jbyte *ptr = (*env)->GetByteArrayElements(env, (jbyteArray)captureBuffer, &isCopy);
             SDL_memcpy(buffer, ptr, br);
-            (*env)->ReleaseByteArrayElements(env, (jbyteArray)captureBuffer, (jbyte *)ptr, JNI_ABORT);
+            (*env)->ReleaseByteArrayElements(env, (jbyteArray)captureBuffer, ptr, JNI_ABORT);
         }
         break;
     case ENCODING_PCM_16BIT:
@@ -1376,7 +1374,7 @@ int Android_JNI_CaptureAudioBuffer(void *buffer, int buflen)
             jshort *ptr = (*env)->GetShortArrayElements(env, (jshortArray)captureBuffer, &isCopy);
             br *= sizeof(Sint16);
             SDL_memcpy(buffer, ptr, br);
-            (*env)->ReleaseShortArrayElements(env, (jshortArray)captureBuffer, (jshort *)ptr, JNI_ABORT);
+            (*env)->ReleaseShortArrayElements(env, (jshortArray)captureBuffer, ptr, JNI_ABORT);
         }
         break;
     case ENCODING_PCM_FLOAT:
@@ -1386,7 +1384,7 @@ int Android_JNI_CaptureAudioBuffer(void *buffer, int buflen)
             jfloat *ptr = (*env)->GetFloatArrayElements(env, (jfloatArray)captureBuffer, &isCopy);
             br *= sizeof(float);
             SDL_memcpy(buffer, ptr, br);
-            (*env)->ReleaseFloatArrayElements(env, (jfloatArray)captureBuffer, (jfloat *)ptr, JNI_ABORT);
+            (*env)->ReleaseFloatArrayElements(env, (jfloatArray)captureBuffer, ptr, JNI_ABORT);
         }
         break;
     default:
@@ -1840,7 +1838,6 @@ Sint64 Android_JNI_FileSeek(SDL_RWops *ctx, Sint64 offset, int whence)
             default:
                 return SDL_SetError("Unknown value for 'whence'");
         }
-        whence = SEEK_SET;
 
         ret = lseek(ctx->hidden.androidio.fd, (off_t)offset, SEEK_SET);
         if (ret == -1) return -1;
@@ -2272,7 +2269,6 @@ void SDL_AndroidBackButton(void)
 {
     JNIEnv *env = Android_JNI_GetEnv();
     (*env)->CallStaticVoidMethod(env, mActivityClass, midManualBackButton);
-    return;
 }
 
 const char * SDL_AndroidGetInternalStoragePath(void)
