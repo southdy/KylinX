@@ -41,34 +41,6 @@ RemovePendingSizeChangedAndResizedEvents(void * userdata, SDL_Event *event)
     return 1;
 }
 
-static int SDLCALL
-RemovePendingMoveEvents(void * userdata, SDL_Event *event)
-{
-    SDL_Event *new_event = (SDL_Event *)userdata;
-
-    if (event->type == SDL_WINDOWEVENT &&
-        event->window.event == SDL_WINDOWEVENT_MOVED &&
-        event->window.windowID == new_event->window.windowID) {
-        /* We're about to post a new move event, drop the old one */
-        return 0;
-    }
-    return 1;
-}
-
-static int SDLCALL
-RemovePendingExposedEvents(void * userdata, SDL_Event *event)
-{
-    SDL_Event *new_event = (SDL_Event *)userdata;
-
-    if (event->type == SDL_WINDOWEVENT &&
-        event->window.event == SDL_WINDOWEVENT_EXPOSED &&
-        event->window.windowID == new_event->window.windowID) {
-        /* We're about to post a new exposed event, drop the old one */
-        return 0;
-    }
-    return 1;
-}
-
 int
 SDL_SendWindowEvent(SDL_Window * window, Uint8 windowevent, int data1,
                     int data2)
@@ -94,21 +66,6 @@ SDL_SendWindowEvent(SDL_Window * window, Uint8 windowevent, int data1,
         window->flags &= ~SDL_WINDOW_SHOWN;
         window->flags |= SDL_WINDOW_HIDDEN;
         SDL_OnWindowHidden(window);
-        break;
-    case SDL_WINDOWEVENT_MOVED:
-        if (SDL_WINDOWPOS_ISUNDEFINED(data1) ||
-            SDL_WINDOWPOS_ISUNDEFINED(data2)) {
-            return 0;
-        }
-        if (!(window->flags & SDL_WINDOW_FULLSCREEN)) {
-            window->windowed.x = data1;
-            window->windowed.y = data2;
-        }
-        if (data1 == window->x && data2 == window->y) {
-            return 0;
-        }
-        window->x = data1;
-        window->y = data2;
         break;
     case SDL_WINDOWEVENT_RESIZED:
         if (!(window->flags & SDL_WINDOW_FULLSCREEN)) {
@@ -173,12 +130,6 @@ SDL_SendWindowEvent(SDL_Window * window, Uint8 windowevent, int data1,
         /* Fixes queue overflow with resize events that aren't processed */
         if (windowevent == SDL_WINDOWEVENT_SIZE_CHANGED) {
             SDL_FilterEvents(RemovePendingSizeChangedAndResizedEvents, &event);
-        }
-        if (windowevent == SDL_WINDOWEVENT_MOVED) {
-            SDL_FilterEvents(RemovePendingMoveEvents, &event);
-        }
-        if (windowevent == SDL_WINDOWEVENT_EXPOSED) {
-            SDL_FilterEvents(RemovePendingExposedEvents, &event);
         }
         posted = (SDL_PushEvent(&event) > 0);
     }

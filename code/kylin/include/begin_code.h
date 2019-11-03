@@ -33,22 +33,6 @@
 #endif
 #define _begin_code_h
 
-#ifndef SDL_DEPRECATED
-#  if (__GNUC__ >= 4)  /* technically, this arrived in gcc 3.1, but oh well. */
-#    define SDL_DEPRECATED __attribute__((deprecated))
-#  else
-#    define SDL_DEPRECATED
-#  endif
-#endif
-
-#ifndef SDL_UNUSED
-#  ifdef __GNUC__
-#    define SDL_UNUSED __attribute__((unused))
-#  else
-#    define SDL_UNUSED
-#  endif
-#endif
-
 /* Some compilers use a special export keyword */
 #ifndef DECLSPEC
 # if defined(__WIN32__) || defined(__WINRT__)

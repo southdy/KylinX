@@ -63,7 +63,6 @@ typedef struct
  *  \brief The type used to identify a window
  *
  *  \sa SDL_CreateWindow()
- *  \sa SDL_CreateWindowFrom()
  *  \sa SDL_DestroyWindow()
  *  \sa SDL_GetWindowData()
  *  \sa SDL_GetWindowFlags()
@@ -141,10 +140,6 @@ typedef enum
     SDL_WINDOWEVENT_NONE,           /**< Never used */
     SDL_WINDOWEVENT_SHOWN,          /**< Window has been shown */
     SDL_WINDOWEVENT_HIDDEN,         /**< Window has been hidden */
-    SDL_WINDOWEVENT_EXPOSED,        /**< Window has been exposed and should be
-                                         redrawn */
-    SDL_WINDOWEVENT_MOVED,          /**< Window has been moved to data1, data2
-                                     */
     SDL_WINDOWEVENT_RESIZED,        /**< Window has been resized to data1xdata2 */
     SDL_WINDOWEVENT_SIZE_CHANGED,   /**< The window size has changed, either as
                                          a result of an API call or through the
